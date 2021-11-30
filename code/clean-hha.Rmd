@@ -1,0 +1,29 @@
+---
+title: "clean-hha"
+author: "Elinor chu"
+date: "11/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+hha_raw = read_excel('/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/data/raw/HHS_OCDO_TDWG_COVID-19_Community_Vulnerability_Crosswalk.xlsx') %>% as_tibble()
+```
+
+```{r}
+mean_data = hha_raw %>% select(STATE, ST_ABBR,COUNTY,`County FIPS`,`HHA Score`) %>%
+  rename(state_full=STATE, state= ST_ABBR, county=COUNTY, fips = `County FIPS`, hha_score = `HHA Score`) %>%
+  mutate(fips=as.numeric(fips))%>%
+  group_by(fips) %>%
+  summarise(mean_hha_score = mean(hha_score))%>%
+  as_tibble()
+```
+
