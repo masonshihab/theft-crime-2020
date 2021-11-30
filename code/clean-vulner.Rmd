@@ -1,0 +1,30 @@
+---
+title: "clean-vulner"
+author: "Elinor chu"
+date: "11/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse) 
+library(stringr)
+library(readxl)
+```
+
+```{r}
+file = "/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/data/raw/Social_Vulnerability_Index_2018.csv"
+vulner_raw = read_csv(file)
+```
+
+```{r}
+vulner_raw = vulner_raw %>% select("STATE", "COUNTY","FIPS","RPL_THEMES")%>% filter(RPL_THEMES>=0)%>%
+  rename(state = STATE, county = COUNTY, fips = FIPS, svi_overall=RPL_THEMES)
+vulner_raw$state = str_to_title(vulner_raw$state)
+
+vulner_raw$fips = as.numeric(vulner_raw$fips)
+```
+
