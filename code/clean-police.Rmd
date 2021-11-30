@@ -15,14 +15,15 @@ library(stringr)
 ```
 
 ```{r}
-file = "/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/data/raw/scorecard.csv"
+file = "../data/raw/scorecard.csv"
 scorecard_raw = read_csv(file)
-```
-
-```{r}
 scorecard_raw = scorecard_raw %>% select("fips_state_code", "fips_county_code",
                                          "calc_police_violence_score","calc_police_accountability_score",
                                          "calc_approach_to_policing_score","calc_police_funding_score")
+```
+
+```{r}
+
 
 scorecard_raw = data.frame(sapply(scorecard_raw, function(x) as.numeric(gsub("%", "", x)))) %>%
   rename(police_violence_score = calc_police_violence_score, 
@@ -35,7 +36,7 @@ scorecard_raw$fips_county_code = str_pad(scorecard_raw$fips_county_code, 3, pad 
 
 scorecard_raw$fips = str_c(scorecard_raw$fips_state_code, scorecard_raw$fips_county_code)
 
-scorecard_raw %>% select(-fips_state_code,-fips_county_code) %>% mutate(fips = as.numeric(fips))
+scorecard_raw = scorecard_raw %>% select(-fips_state_code,-fips_county_code) %>% mutate(fips = as.numeric(fips))
 
 
 ```

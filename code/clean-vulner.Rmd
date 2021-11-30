@@ -16,7 +16,7 @@ library(readxl)
 ```
 
 ```{r}
-file = "/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/data/raw/Social_Vulnerability_Index_2018.csv"
+file = "../data/raw/Social_Vulnerability_Index_2018.csv"
 vulner_raw = read_csv(file)
 ```
 

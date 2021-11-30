@@ -15,7 +15,7 @@ library(readxl)
 ```
 
 ```{r}
-hha_raw = read_excel('/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/data/raw/HHS_OCDO_TDWG_COVID-19_Community_Vulnerability_Crosswalk.xlsx') %>% as_tibble()
+hha_raw = read_excel('../data/raw/HHS_OCDO_TDWG_COVID-19_Community_Vulnerability_Crosswalk.xlsx') %>% as_tibble()
 ```
 
 ```{r}
