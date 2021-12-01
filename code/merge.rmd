@@ -239,6 +239,49 @@ healthrank_raw$fips = as.numeric(healthrank_raw$fips)
 merge5 = merge4 %>% inner_join(healthrank_raw, by = "fips")
 ```
 
+
+```{r}
+
+stopwords2 = c(" County")
+
+merge5$county = removeWords(merge5$county, stopwords2)
+```
+
+
+
+## state expenses
+
+```{r}
+state_expenses = read_xlsx("../data/raw/expenditures.xlsx") %>% rename(state = State, spend_per_capita = `State and Local Direct General Expenditures, Per Capita`)
+```
+
+```{r}
+merge6 = merge5 %>% inner_join(state_expenses, by = "state")
+```
+
+
+## state unemployment benefits
+
+```{r}
+unemp_bens = read_xlsx("../data/raw/unemployment bens.xlsx")
+
+stopwords3 = c("Individual", "w/dependents", "up", "to")
+
+unemp_bens$amount = removeWords(unemp_bens$amount, stopwords3)
+
+unemp_bens = unemp_bens %>% separate(amount, into = c("individual", "w_dependents"), sep = "  ") %>% mutate(individual = extract_numeric(individual), w_dependents = extract_numeric(w_dependents))
+
+unemp_bens$w_dependents = ifelse(is.na(unemp_bens$w_dependents), unemp_bens$individual, unemp_bens$w_dependents) 
+
+unemp_bens = unemp_bens %>% mutate(average_bens = (as.numeric(individual)+as.numeric(w_dependents))/2) %>% mutate(benefits_possible = average_bens*weeks) 
+```
+
+```{r}
+merge7 = merge6 %>% inner_join(unemp_bens, by = "states")
+```
+
+
+
 ## add response
 
 
@@ -298,15 +341,8 @@ missingcounties = citiestocounties %>% filter(!(County_State %in% countycrime$Co
 response = rbind(missingcounties, countycrime) %>% drop_na() %>% rename(county = County, state = State) 
 ```
 
-```{r}
-
-stopwords2 = c(" County")
-
-merge5$county = removeWords(merge5$county, stopwords2)
+```{}
+merge_with_response = merge? %>% inner_join(response, by = c("state", "county")) 
 ```
 
-
-```{r}
-merge5_with_response = merge5 %>% inner_join(response, by = c("state", "county")) 
-```
 
