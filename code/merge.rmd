@@ -277,7 +277,7 @@ unemp_bens = unemp_bens %>% mutate(average_bens = (as.numeric(individual)+as.num
 ```
 
 ```{r}
-merge7 = merge6 %>% inner_join(unemp_bens, by = "states")
+merge7 = merge6 %>% inner_join(unemp_bens, by = "state")
 ```
 
 
