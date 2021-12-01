@@ -273,7 +273,7 @@ unemp_bens = unemp_bens %>% separate(amount, into = c("individual", "w_dependent
 
 unemp_bens$w_dependents = ifelse(is.na(unemp_bens$w_dependents), unemp_bens$individual, unemp_bens$w_dependents) 
 
-unemp_bens = unemp_bens %>% mutate(average_bens = (as.numeric(individual)+as.numeric(w_dependents))/2) %>% mutate(benefits_possible = average_bens*weeks) 
+unemp_bens = unemp_bens %>% mutate(average_bens = (as.numeric(individual)+as.numeric(w_dependents))/2) %>% mutate(benefits_possible = average_bens*weeks) %>% select(state, benefits_possible)
 ```
 
 ```{r}
