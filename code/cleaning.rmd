@@ -104,7 +104,7 @@ ACS_election = election_clean %>% inner_join(ACS_vars, by = c("state", "county")
 ```
 
 ```{r}
-keyfile = read_csv("../data/raw/ZIP-COUNTY-FIPS_2010-03.csv") %>% 
+keyfile = read_csv("../data/raw/ZIP-COUNTY-FIPS_2017-06.csv") %>% 
   mutate(state_full = abbr2state(STATE),) %>% rename(county = COUNTYNAME, state = state_full, fips = STCOUNTYFP) %>% select(-ZIP) %>% distinct() 
 ```
 
@@ -296,7 +296,7 @@ census_step_zip = census_data_zip %>%
 ```
 
 ```{r}
-file = "../data/raw/irs.csv"
+file = "../data/raw/irstiny.csv"
 irs_raw = read_csv(file)
 
 irs_raw = irs_raw%>%select(zipcode, N07240)%>% mutate(zip = as.numeric(zipcode),saverscredit = N07240)%>%select(-zipcode,-N07240) %>% group_by(zip) %>% summarise(saverscredit = sum(saverscredit))%>%ungroup()
