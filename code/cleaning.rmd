@@ -281,6 +281,47 @@ merge7 = merge6 %>% inner_join(unemp_bens, by = "state")
 ```
 
 
+#IRS-retirement saving
+
+```{r}
+census_data_zip <- get_acs(geography = "zcta", variables = c(totalpop = "B01003_001"), 
+                       year = 2018)
+
+
+
+census_step_zip = census_data_zip %>% 
+  pivot_wider(id_cols = c(NAME), names_from = variable, values_from = estimate) %>% 
+  separate(NAME, into = c("zcta", "zip"), sep = " ") %>% select(-zcta) %>% mutate(zip = as.numeric(zip))
+
+```
+
+```{r}
+file = "../data/raw/irs.csv"
+irs_raw = read_csv(file)
+
+irs_raw = irs_raw%>%select(zipcode, N07240)%>% mutate(zip = as.numeric(zipcode),saverscredit = N07240)%>%select(-zipcode,-N07240) %>% group_by(zip) %>% summarise(saverscredit = sum(saverscredit))%>%ungroup()
+irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saversperpop=saverscredit/totalpop)
+
+```
+
+```{r}
+file = "../data/raw/ZIP-COUNTY-FIPS_2017-06.csv"
+key_zip_county = read_csv(file)
+
+key_zip_county = key_zip_county %>% rename(zip=ZIP, county=COUNTYNAME, fips=STCOUNTYFP)%>% mutate(zip=as.numeric(zip)) %>% select(zip, county,fips)
+
+irs_joined = key_zip_county%>%inner_join(irs_clean, by="zip")
+
+irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperpop = mean(saversperpop)) %>% ungroup() %>% mutate(fips=as.numeric(fips))
+```
+
+```{r}
+merge8=merge7_with_response%>%inner_join(irs_final,by="fips")
+```
+
+
+
+
 
 ## add response
 
@@ -341,8 +382,8 @@ missingcounties = citiestocounties %>% filter(!(County_State %in% countycrime$Co
 response = rbind(missingcounties, countycrime) %>% drop_na() %>% rename(county = County, state = State) 
 ```
 
-```{}
-merge_with_response = merge? %>% inner_join(response, by = c("state", "county")) 
+```{r}
+merge_with_response = merge8 %>% inner_join(response, by = c("state", "county")) 
 ```
 
 
