@@ -1,11 +1,14 @@
 ---
-title: ""
-author: "Mason Shihab"
-date: "3/13/2021"
-output:
-  pdf_document:
-    latex_engine: xelatex
+title: "incarceration rate 2020"
+author: "Elinor chu"
+date: "11/23/2021"
+output: pdf_document
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -22,6 +25,7 @@ library(readxl)
 library(usdata)
 library(tm)
 library(stringr)
+library(randomForest)
 ```
 
 
@@ -109,8 +113,9 @@ keyfile = read_csv("../data/raw/ZIP-COUNTY-FIPS_2017-06.csv") %>%
 ```
 
 ```{r}
-ACS_election_key = ACS_election %>% inner_join(keyfile, by = c("state", "county")) %>%  mutate(fips = as.numeric(fips))
+ACS_election_key = ACS_election %>% inner_join(keyfile, by = c("state", "county")) %>%  mutate(fips = as.numeric(fips)) %>% drop_na()
 ```
+
 
 ## Land and Density
 
@@ -124,6 +129,7 @@ ACS_election_land = ACS_election_key %>% inner_join(land, by = "fips") %>% mutat
 ```
 
 
+
 ## % in Poverty
 
 ```{r}
@@ -133,7 +139,7 @@ poverty$fips = as.numeric(paste(poverty$`State FIPS Code`, poverty$`County FIPS 
 
 ```{r}
 merge1 = ACS_election_land %>% inner_join(poverty, by = "fips") %>% 
-  select(-STATE, -CLASSFP, -Areaname, -`State FIPS Code`, -`County FIPS Code`) 
+  select(-STATE, -CLASSFP, -Areaname, -`State FIPS Code`, -`County FIPS Code`) %>% drop_na()
 ```
 
 
@@ -171,7 +177,7 @@ scorecard_clean = scorecard_raw %>% select(-fips_state_code,-fips_county_code) %
 ```
 
 ```{r}
-merge2 = merge1 %>% inner_join(scorecard_clean, by = "fips")
+merge2 = merge1 %>% inner_join(scorecard_clean, by = "fips") %>% drop_na()
 
 ```
 
@@ -192,7 +198,7 @@ mean_data = hha_raw %>% select(`County FIPS`,`HHA Score`) %>%
 ```
 
 ```{r}
-merge3 = merge2 %>% inner_join(mean_data, by = "fips")
+merge3 = merge2 %>% inner_join(mean_data, by = "fips") %>% drop_na()
 
 ```
 
@@ -211,9 +217,18 @@ vulner_raw$fips = as.numeric(vulner_raw$fips)
 ```
 
 ```{r}
-merge4 = merge3 %>% inner_join(vulner_raw, by = "fips")
+merge4 = merge3 %>% inner_join(vulner_raw, by = "fips") %>% drop_na()
 
 ```
+
+
+```{r}
+
+stopwords2 = c(" County")
+
+merge4$county = removeWords(merge4$county, stopwords2)
+```
+
 
 ## County Health Rank
 
@@ -231,17 +246,8 @@ healthrank_raw$fips = as.numeric(healthrank_raw$fips)
 ```
 
 ```{}
-merge5 = merge4 %>% inner_join(healthrank_raw, by = "fips")
+merge5 = merge4 %>% inner_join(healthrank_raw, by = "fips") %>% drop_na()
 ```
-
-
-```{}
-
-stopwords2 = c(" County")
-
-merge5$county = removeWords(merge5$county, stopwords2)
-```
-
 
 
 ## state expenses
@@ -251,7 +257,7 @@ state_expenses = read_xlsx("../data/raw/expenditures.xlsx") %>% rename(state = S
 ```
 
 ```{r}
-merge6 = merge4 %>% inner_join(state_expenses, by = "state")
+merge6 = merge4 %>% inner_join(state_expenses, by = "state") %>% drop_na()
 ```
 
 
@@ -272,7 +278,7 @@ unemp_bens = unemp_bens %>% mutate(average_bens = (as.numeric(individual)+as.num
 ```
 
 ```{r}
-merge7 = merge6 %>% inner_join(unemp_bens, by = "state") 
+merge7 = merge6 %>% inner_join(unemp_bens, by = "state") %>% drop_na()
 ```
 
 
@@ -311,67 +317,77 @@ irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperpop = mean(saversp
 ```
 
 ```{r}
-merge8=merge7 %>%inner_join(irs_final,by="fips") %>% drop_na()
+merge8=merge7 %>%inner_join(irs_final,by="fips") %>% drop_na
 ```
 
+## incarceration rate 
 
-## add response
-
-
-```{r}
-hope = read.csv("https://raw.githubusercontent.com/grammakov/USA-cities-and-states/master/us_cities_states_counties.csv", sep = "|") %>% rename(State = State.full) 
-hope = hope %>% select(-City.alias)
-countycrime = read_xlsx("../data/raw/countycrime.xlsx") %>% select(State, County, Total_Theft)
-citycrime = read_xlsx("../data/raw/citycrime.xlsx") 
-```
-
+## load
 
 ```{r}
-citycrime$State = removeNumbers(citycrime$State)
-citycrime$City = removeNumbers(citycrime$City)
-
-countycrime$State = removeNumbers(countycrime$State)
-countycrime$County = removeNumbers(countycrime$County)
+url = "https://raw.githubusercontent.com/themarshallproject/incarceration-census/main/census_incarceration.csv"
+incar_raw = read_csv(url) %>% select(FIPS, state, county, total_population_20, incarcerated_20)%>%
+  mutate(incar_rate = incarcerated_20/total_population_20) %>%
+  select(incar_rate, FIPS) %>% rename(fips = FIPS) %>% ungroup()
 ```
 
 
 ```{r}
-countycrime$county_words = sapply(gregexpr("\\S+", countycrime$County), length)
-
-
-stopwords = c(" County Police Department", " County Unified Police Department", " Public Safety")
-
-countycrime$County = removeWords(countycrime$County, stopwords)
-
-countycrime = countycrime %>% group_by(County, State) %>% summarise(Total_Theft = sum(Total_Theft)) %>% ungroup()
-
+incarvars = merge8 %>% inner_join(incar_raw, by = "fips") %>% select(-totalpop) %>% drop_na() %>% as.data.frame()
 ```
 
-
-
-```{r}
-
-citycrimecounty = hope %>% inner_join(citycrime, by = c("State", "City")) %>% distinct() 
-
-citycrimecounty$County = tolower(citycrimecounty$County)
-citycrimecounty$County = str_to_title(citycrimecounty$County)
-
-```
-
+### train and test
 
 ```{r}
-citiestocounties = citycrimecounty %>% group_by(County, State) %>% summarise(Total_Thefts = sum(Total_Thefts))
-citiestocounties$County_State = paste(citiestocounties$County, citiestocounties$State)
-countycrime$County_State = paste(countycrime$County, countycrime$State)
-
+incar_0 = incarvars %>% filter(incar_rate == 0)
 ```
 
 ```{r}
-missingcounties = citiestocounties %>% filter(!(County_State %in% countycrime$County_State))  %>% rename(Total_Theft = Total_Thefts)
+incar_complete = incarvars %>% filter(!(incar_rate == 0)) %>% drop_na()
 ```
 
 ```{r}
-response = rbind(missingcounties, countycrime) %>% drop_na() %>% rename(county = County, state = State) 
+incar_0rf = incar_0 %>% select(-fips, -county, -state)
+```
+
+```{r}
+incar_completerf = incar_complete %>% as.data.frame() %>% select(-fips, -county, -state)
+```
+
+```{r}
+train_samples = sample(1:nrow(incar_completerf), round(0.8*nrow(incar_completerf)))
+incar_train = incar_completerf %>% filter(row_number() %in% train_samples)
+incar_test = incar_completerf %>% filter(!(row_number() %in% train_samples))
+```
+
+```{r}
+rf_fit = randomForest(incar_rate ~ ., data = incar_train)
+```
+
+```{r}
+rf_predictions = predict(rf_fit, newdata = incar_test)
+```
+
+```{r}
+mean((rf_predictions - incar_test$incar_rate)^2)
+```
+
+### filling in missing values from all rows
+
+```{r}
+rf_fit2 = randomForest(incar_rate ~ ., data = incar_completerf)
 ```
 
 
+```{r}
+rf_predictions2 = predict(rf_fit2, newdata = incar_0rf)
+```
+
+```{r}
+incar_predicted = incar_0
+incar_predicted$incar_rate = rf_predictions2
+```
+
+```{r}
+incar_final = rbind(incar_predicted, incar_complete) %>% drop_na() %>% select(fips, incar_rate)
+```
