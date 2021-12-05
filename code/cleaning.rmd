@@ -15,9 +15,6 @@ library(tidyverse)
 library(ggplot2)
 library(readr)
 library(tidycensus)
-library(rpart)
-library(rpart.plot)
-library(ipred)
 library(readxl)
 library(usdata)
 library(tm)
@@ -218,19 +215,19 @@ merge4 = merge3 %>% inner_join(vulner_raw, by = "fips")
 ## County Health Rank
 
 
-```{}
+```{r}
 file = "../data/raw/analytic_data2020_0.csv"
 healthrank_raw = read_csv(file, skip=1)
-healthrank_raw= healthrank_raw %>% select(fipscode,v141_rawvalue, v142_rawvalue, 
+healthrank_raw= healthrank_raw %>% select(fipscode,v142_rawvalue, 
                           v024_rawvalue, v154_rawvalue, v136_rawvalue, v002_rawvalue) %>%
-  rename(res_seg_black_white = v141_rawvalue, res_seg_nonwhite_white = v142_rawvalue, pct_child_in_pov = v024_rawvalue, sev_hou_cost_burden = v154_rawvalue, sev_hou_prob = v136_rawvalue, poor_fair_health = v002_rawvalue , fips =fipscode)
+  rename(res_seg_nonwhite_white = v142_rawvalue, pct_child_in_pov = v024_rawvalue, sev_hou_cost_burden = v154_rawvalue, sev_hou_prob = v136_rawvalue, poor_fair_health = v002_rawvalue , fips =fipscode)
 ```
 
-```{}
+```{r}
 healthrank_raw$fips = as.numeric(healthrank_raw$fips)
 ```
 
-```{}
+```{r}
 merge5 = merge4 %>% inner_join(healthrank_raw, by = "fips")
 ```
 
@@ -251,7 +248,7 @@ state_expenses = read_xlsx("../data/raw/expenditures.xlsx") %>% rename(state = S
 ```
 
 ```{r}
-merge6 = merge4 %>% inner_join(state_expenses, by = "state")
+merge6 = merge5 %>% inner_join(state_expenses, by = "state")
 ```
 
 
@@ -314,64 +311,8 @@ irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperpop = mean(saversp
 merge8=merge7 %>%inner_join(irs_final,by="fips") %>% drop_na()
 ```
 
-
-## add response
-
-
 ```{r}
-hope = read.csv("https://raw.githubusercontent.com/grammakov/USA-cities-and-states/master/us_cities_states_counties.csv", sep = "|") %>% rename(State = State.full) 
-hope = hope %>% select(-City.alias)
-countycrime = read_xlsx("../data/raw/countycrime.xlsx") %>% select(State, County, Total_Theft)
-citycrime = read_xlsx("../data/raw/citycrime.xlsx") 
-```
-
-
-```{r}
-citycrime$State = removeNumbers(citycrime$State)
-citycrime$City = removeNumbers(citycrime$City)
-
-countycrime$State = removeNumbers(countycrime$State)
-countycrime$County = removeNumbers(countycrime$County)
-```
-
-
-```{r}
-countycrime$county_words = sapply(gregexpr("\\S+", countycrime$County), length)
-
-
-stopwords = c(" County Police Department", " County Unified Police Department", " Public Safety")
-
-countycrime$County = removeWords(countycrime$County, stopwords)
-
-countycrime = countycrime %>% group_by(County, State) %>% summarise(Total_Theft = sum(Total_Theft)) %>% ungroup()
-
-```
-
-
-
-```{r}
-
-citycrimecounty = hope %>% inner_join(citycrime, by = c("State", "City")) %>% distinct() 
-
-citycrimecounty$County = tolower(citycrimecounty$County)
-citycrimecounty$County = str_to_title(citycrimecounty$County)
-
-```
-
-
-```{r}
-citiestocounties = citycrimecounty %>% group_by(County, State) %>% summarise(Total_Thefts = sum(Total_Thefts))
-citiestocounties$County_State = paste(citiestocounties$County, citiestocounties$State)
-countycrime$County_State = paste(countycrime$County, countycrime$State)
-
-```
-
-```{r}
-missingcounties = citiestocounties %>% filter(!(County_State %in% countycrime$County_State))  %>% rename(Total_Theft = Total_Thefts)
-```
-
-```{r}
-response = rbind(missingcounties, countycrime) %>% drop_na() %>% rename(county = County, state = State) 
+write.csv(merge8, file = '../data/clean/merge8.csv', row.names = FALSE)
 ```
 
 
