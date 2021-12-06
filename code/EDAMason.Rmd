@@ -22,13 +22,13 @@ library(stringr)
 ```
 
 ```{r}
-dataclean = read.csv("../data/clean/dataclean.csv")
+theftdata = read.csv("../data/clean/dataclean.csv")
 ```
 
 ```{r}
 map_data("county") %>%
   as_tibble() %>% 
-  left_join(dataclean %>% 
+  left_join(theftdata %>% 
               rename(region = state, 
                      subregion = county,
                      `Theft Rate` = theftrate) %>% 
@@ -44,4 +44,6 @@ map_data("county") %>%
   scale_fill_gradient(low = "blue", high = "red") +
   theme_void()
 ```
+
+
 
