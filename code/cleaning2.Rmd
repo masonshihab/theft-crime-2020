@@ -105,7 +105,11 @@ merge9incar = read_csv("../data/clean/merge9incar.csv")
 
 ```{r}
 merge_with_response = merge9incar %>% inner_join(responsekey, by = "fips") %>% mutate(theftrate = Total_Theft/totalpop, .keep = "unused") %>% drop_na()
+
+merge_with_response$county = removeWords(merge_with_response$county, stopwords3)
+
 ```
+
 
 ```{r}
 write.csv(merge_with_response, file = '../data/clean/dataclean.csv', row.names = FALSE)
