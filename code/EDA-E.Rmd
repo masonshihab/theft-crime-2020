@@ -1,0 +1,56 @@
+---
+title: "EDA"
+author: "Elinor chu"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(usdata)
+library(tm)
+library(stringr)
+
+
+library(kableExtra)
+library(rpart)         # to train decision trees
+library(rpart.plot)    # to plot decision trees
+library(randomForest)  # random forests
+library(gbm)           # boosting
+```
+
+```{r}
+crimedata=read_csv("../data/clean/dataclean.csv")
+```
+
+```{r}
+ggplot(crimedata, aes(x = theftrate)) +
+  geom_histogram()+
+  theme_bw()+
+  scale_y_log10()
+```
+```{r}
+crimedata %>% ggplot(aes(y=theftrate)) +
+  geom_boxplot()+
+  theme_bw()
+```
+
+```{r}
+crimedata %>% select(state,county,theftrate) %>% arrange(desc(theftrate)) %>% head(10) %>%
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE,
+        digits = 3,
+        col.names = c("State", "County","Theft Rate"),
+        caption = "This a table showing the top 10 counties with the highest theft rate.") %>%
+  kable_styling(position = "center") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+

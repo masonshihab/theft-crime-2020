@@ -31,3 +31,12 @@ healthrank_raw$fips = as.numeric(healthrank_raw$fips)
 
 ```
 
+```{r}
+sum(is.na(healthrank_raw$res_seg_nonwhite_white))
+
+```
+
+```{r}
+sum(is.na(healthrank_raw$res_seg_black_white))
+```
+
