@@ -1,0 +1,133 @@
+---
+title: "EDA"
+author: "Elinor chu"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(usdata)
+library(tm)
+library(stringr)
+
+
+library(kableExtra)
+```
+
+```{r}
+theftdata=read_csv("../data/clean/dataclean.csv")
+```
+
+```{r}
+ggplot(theftdata, aes(x = theftrate)) +
+  geom_histogram()+
+  theme_bw()+
+  scale_y_log10()
+```
+```{r}
+theftdata %>% ggplot(aes(y=theftrate)) +
+  geom_boxplot()+
+  theme_bw()
+```
+
+```{r}
+theftdata %>% select(state,county,theftrate) %>% arrange(desc(theftrate)) %>% head(10) %>%
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE,
+        digits = 3,
+        col.names = c("State", "County","Theft Rate"),
+        caption = "This a table showing the top 10 counties with the highest theft rate.") %>%
+  kable_styling(position = "center") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+#EDA for important features
+
+```{r}
+# plot theftrate against housing_density
+p1 = theftdata %>%
+  ggplot(aes(x = housing_density, y = theftrate)) +
+  geom_point() + 
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  labs(x = "Housing Density", 
+       y = "Theft Rate",
+       title = "Housing Density") +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+theftdata %>% arrange(desc(housing_density))%>%head(5)
+```
+
+
+```{r}
+# plot theftrate against pop_density
+p2 = theftdata %>%
+  ggplot(aes(x = pop_density, y = theftrate)) +
+  geom_point() + 
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  labs(x = "Population Density", 
+       y = "Theft Rate",
+       title = "Population Density") +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+# plot theftrate against poor_fair_health
+p3 = theftdata %>%
+  ggplot(aes(x = poor_fair_health, y = theftrate)) +
+  geom_point() + 
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  labs(x = "Poor/Fair Health", 
+       y = "Theft Rate",
+       title = "Poor/Fair Health") +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+# plot theftrate against pertrump
+p4 = theftdata %>%
+  ggplot(aes(x = pertrump, y = theftrate)) +
+  geom_point() + 
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  labs(x = "Pertrump", 
+       y = "Theft Rate",
+       title = "Pertrump") +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+# plot theftrate against police_funding_score
+p5 = theftdata %>%
+  ggplot(aes(x = police_funding_score, y = theftrate)) +
+  geom_point() + 
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
+  labs(x = "Police Funding Score", 
+       y = "Theft Rate",
+       title = "Police Funding Score") +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+theftdata %>% arrange(police_funding_score)%>%head(5)
+```

@@ -1,0 +1,66 @@
+---
+title: "tree-modeling-elinor"
+author: "Elinor chu"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+options(scipen = 0, digits = 3)  # controls number of significant digits printed
+```
+
+```{r, message = FALSE}
+library(rpart)         # to train decision trees
+library(rpart.plot)    # to plot decision trees
+library(randomForest)  # random forests
+library(gbm)           # boosting
+library(tidyverse)     # tidyverse
+library(kableExtra)    # for printing tables
+library(cowplot)       # for side by side plots
+```
+
+```{r}
+theftdata=read_csv("../data/clean/dataclean.csv")
+```
+
+
+## Random Forest
+```{r}
+set.seed(471) # set seed for reproducibility
+train_samples = sample(1:nrow(theftdata), round(0.8*nrow(theftdata)))
+theft_train = theftdata %>% filter(row_number() %in% train_samples) %>% select(-county,-state)
+theft_test = theftdata %>% filter(!(row_number() %in% train_samples))%>% select(-county,-state)
+```
+
+
+
+```{r, cache=TRUE}
+set.seed(471) # set seed for reproducibility
+
+mvalues = seq(1,13, by = 1)
+oob_errors = numeric(length(mvalues))
+ntree = 500
+for(idx in 1:length(mvalues)){
+  m = mvalues[idx]
+  rf_fit = randomForest(theftrate ~ ., mtry = m, data = theft_train)
+  oob_errors[idx] = rf_fit$mse[ntree]
+}
+tibble(m = mvalues, oob_err = oob_errors) %>%
+  ggplot(aes(x = m, y = oob_err)) + 
+  geom_line() + geom_point() + 
+  scale_x_continuous(breaks = mvalues) +
+  theme_bw()
+```
+
+```{r}
+rf_4 = randomForest(theftrate ~ ., mtry = 4, data = theft_train)
+```
+
+```{r}
+rf_4$importance 
+```
+
+```{r}
+varImpPlot(rf_4,n.var = 10)
+```
+
