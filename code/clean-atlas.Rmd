@@ -1,0 +1,33 @@
+---
+title: "atlas"
+author: "Elinor chu"
+date: "12/12/2021"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse) 
+library(stringr)
+```
+
+```{r}
+file = "People.csv"
+atlas_people_raw = read_csv(file)
+atlas_people_raw = atlas_people_raw %>% select(FIPS, State, County, ForeignBornEuropePct,ForeignBornMexPct,ForeignBornCaribPct, ForeignBornCentralSouthAmPct, ForeignBornAsiaPct, ForeignBornAfricaPct, AvgHHSize, PopChangeRate1819, NonEnglishHHNum)
+
+```
+
+```{r}
+file = "Jobs.csv"
+atlas_jobs_raw = read_csv(file)
+
+atlas_jobs_raw = atlas_jobs_raw %>% select(FIPS, State, County, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrade, PctEmpInformation, PctEmpFIRE)
+```
+
+```{r}
+file = "Income.csv"
+atlas_income_raw = read_csv(file)
+atlas_income_raw = atlas_income_raw %>% select(FIPS, State, County, Deep_Pov_Children, PerCapitaInc, Deep_Pov_All)
+
+```
+
