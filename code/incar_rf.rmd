@@ -26,7 +26,7 @@ library(readr)
 
 
 ```{r}
-merge8 = read_csv("../data/clean/merge8.csv")
+merge11 = read_csv("../data/clean/merge11.csv")
 ```
 
 ## load
@@ -102,10 +102,10 @@ incar_final = rbind(incar_predicted, incar_complete) %>% drop_na() %>% select(in
 ```
 
 ```{r}
-merge9 = merge8 %>% inner_join(incar_final, by = "fips")
+merge12 = merge11 %>% inner_join(incar_final, by = "fips")
 ```
 
 
 ```{r}
-write.csv(merge9, file = '../data/clean/merge9incar.csv', row.names = FALSE)
+write.csv(merge12, file = '../data/clean/merge12incar.csv', row.names = FALSE)
 ```

@@ -338,8 +338,54 @@ irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperpop = mean(saversp
 merge8=merge7 %>%inner_join(irs_final,by="fips") %>% drop_na()
 ```
 
+
+
 ```{r}
-write.csv(merge8, file = '../data/clean/merge8.csv', row.names = FALSE)
+file = "../data/raw/People.csv"
+atlas_people_raw = read_csv(file)
+atlas_people_raw = atlas_people_raw %>% select(FIPS, ForeignBornEuropePct,ForeignBornMexPct,ForeignBornCaribPct, ForeignBornCentralSouthAmPct, ForeignBornAsiaPct, ForeignBornAfricaPct, AvgHHSize, PopChangeRate1819, NonEnglishHHNum) %>% rename(fips = FIPS) %>% mutate(fips = as.numeric(fips))
+
+```
+
+
+
+
+```{r}
+merge9=merge8 %>%inner_join(atlas_people_raw,by="fips") %>% drop_na()
+```
+
+
+
+
+```{r}
+file = "../data/raw/Jobs.csv"
+atlas_jobs_raw = read_csv(file)
+
+atlas_jobs_raw = atlas_jobs_raw %>% select(FIPS, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrade, PctEmpInformation, PctEmpFIRE) %>% rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
+```
+
+
+```{r}
+merge10=merge9 %>%inner_join(atlas_jobs_raw,by="fips") %>% drop_na()
+```
+
+
+```{r}
+file = "../data/raw/Income.csv"
+atlas_income_raw = read_csv(file)
+atlas_income_raw = atlas_income_raw %>% select(FIPS, Deep_Pov_Children, PerCapitaInc, Deep_Pov_All)  %>% rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
+
+```
+
+
+```{r}
+merge11=merge10 %>%inner_join(atlas_income_raw,by="fips") %>% drop_na()
+```
+
+
+
+```{r}
+write.csv(merge11, file = '../data/clean/merge11.csv', row.names = FALSE)
 ```
 
 
