@@ -52,13 +52,36 @@ census_data <- get_acs(geography = "county", variables = c(med_age = "B01002_001
                                                            med_2bed = "B25031_004",
                                                            single_mom = "B11012_010",
                                                            lessthan_hs = "B16010_002",
-                                                           housing_units = "B25001_001"), 
-                       year = 2019)
+                                                           housing_units = "B25001_001",
+                                                           households = "B11001_002",
+                                                           inschool = "B14001_002",
+                                                           ingradprofesh = "B14001_009",
+                                                           inundergrad = "B14001_008",
+                                                           Marriedcouplefamily = "B11001_003",
+                                                           withkids = "B23009_002",
+                                                           singledad = "B19131_039", 
+                                                           divorced = "B07008_004",
+                                                           nevermarried = "B06008_002",
+                                                           foreignborn = "B99051_005",
+                                                           fromdifstate = "B07001_065",
+                                                           fromabroad = "B07001_081",
+                                                           widowed = "B06008_006",
+                                                           dis5to17male = "B18101_007",
+                                                           dis5to17female = "B18101_026",
+                                                           dis18to34male = "B18101_010",
+                                                           dis18to34female = "B18101_029",
+                                                           dis35to64male = "B18101_013",
+                                                           dis35to64female = "B18101_032",
+
+                       year = 2019))
+```
 
 
 
 
 
+
+```{r}
 census_step = census_data %>% 
   pivot_wider(id_cols = c(NAME), names_from = variable, values_from = estimate) %>% 
   separate(NAME, into = c("county", "state"), sep = ", ") %>% arrange(state, county)
@@ -69,8 +92,12 @@ census_wider = census_step %>%
          bachplus = bachplus/totalpop, unemployed_rate = unemployed/(employed+unemployed), employed_rate = employed/(employed+unemployed),
          foodstamp = foodstamp/totalpop, no_health_ins = 
            (ilefnhi+ilufnhi+nilfnhi)/totalpop, single_mom = 
-           single_mom/totalpop, lessthan_hs = lessthan_hs/totalpop) %>% 
-  select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed)
+           single_mom/households, lessthan_hs = lessthan_hs/totalpop, incschool = inschool/totalpop, ingradprofesh = ingradprofesh/totalpop, inundergrad = inundergrad/totalpop, Marriedcouplefamily = Marriedcouplefamily/households, withkids = withkids/households, singledad = singledad/households, divorced = divorced/totalpop, widowed = widowed/totalpop, nevermarried = nevermarried/totalpop, foreignborn = foreignborn/totalpop, fromdifstate = fromdifstate/totalpop, fromabroad = fromabroad/totalpop) %>% mutate(
+             dis5to17 = (dis5to17male + dis5to17female)/totalpop,
+             dis18to34 = (dis18to34male + dis18to34female)/totalpop,             
+             dis35to64 = (dis35to64male + dis35to64female)/totalpop,
+             ) %>% 
+  select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -households, -dis5to17male, -dis5to17female, -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
 ACS_vars = drop_na(census_wider)
 
 
