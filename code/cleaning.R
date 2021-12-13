@@ -52,8 +52,8 @@ census_data <- get_acs(geography = "county", variables = c(med_age = "B01002_001
                                                            dis18to34female = "B18101_029",
                                                            dis35to64male = "B18101_013",
                                                            dis35to64female = "B18101_032",
-                                                           
-                                                           year = 2019))
+
+                       year = 2019))
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ census_wider = census_step %>%
              dis5to17 = (dis5to17male + dis5to17female)/totalpop,
              dis18to34 = (dis18to34male + dis18to34female)/totalpop,             
              dis35to64 = (dis35to64male + dis35to64female)/totalpop,
-           ) %>% 
+             ) %>% 
   select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -households, -dis5to17male, -dis5to17female, -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
 ACS_vars = drop_na(census_wider)
 
@@ -81,7 +81,7 @@ ACS_vars = drop_na(census_wider)
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 election = read_csv("../data/raw/president_county_candidate.csv", 
-                    col_types = cols(won = col_skip()))
+    col_types = cols(won = col_skip()))
 
 
 
@@ -198,7 +198,7 @@ merge4 = merge3 %>% inner_join(vulner_raw, by = "fips")
 file = "../data/raw/analytic_data2020_0.csv"
 healthrank_raw = read_csv(file, skip=1)
 healthrank_raw= healthrank_raw %>% select(fipscode,v142_rawvalue, 
-                                          v024_rawvalue, v154_rawvalue, v136_rawvalue, v002_rawvalue) %>%
+                          v024_rawvalue, v154_rawvalue, v136_rawvalue, v002_rawvalue) %>%
   rename(res_seg_nonwhite_white = v142_rawvalue, pct_child_in_pov = v024_rawvalue, sev_hou_cost_burden = v154_rawvalue, sev_hou_prob = v136_rawvalue, poor_fair_health = v002_rawvalue , fips =fipscode)
 
 
@@ -238,7 +238,7 @@ merge7 = merge6 %>% inner_join(unemp_bens, by = "state")
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 census_data_zip <- get_acs(geography = "zcta", variables = c(totalpop = "B01003_001"), 
-                           year = 2018)
+                       year = 2018)
 
 
 
