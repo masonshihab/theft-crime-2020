@@ -36,9 +36,10 @@ theftdata = read.csv("../data/clean/dataclean.csv") %>% as.data.frame() %>% sele
 theft_samples = sample(1:nrow(theftdata), round(0.8*nrow(theftdata))) 
 theft_train = theftdata %>% filter(row_number() %in% train_samples)
 theft_test = theftdata %>% filter(!(row_number() %in% train_samples))
-
-
 ```
+
+
+
 
 
 ```{r, message = FALSE}
