@@ -1,4 +1,4 @@
-theftdata = read.csv("../data/clean/dataclean.csv") %>% as.data.frame() %>% select(-county, -state,)
+theftdata = read.csv("../data/clean/dataclean.csv") %>% as.data.frame()
 
 set.seed(471)
 
