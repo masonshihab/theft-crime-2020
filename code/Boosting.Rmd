@@ -22,7 +22,7 @@ library(gbm)           # boosting
 ```
 
 ```{r}
-theftdata = read.csv("../data/clean/dataclean.csv") %>% as.data.frame() %>% select(-county, -state, -fips)
+theftdata = read.csv("../data/clean/dataclean.csv") %>% as.data.frame() %>% select(-county, -state,)
 ```
 
 ```{r}
@@ -46,7 +46,7 @@ i. (2 points) Fit boosted tree models with interaction depths 1, 2, and 3. For e
 set.seed(471) # for reproducibility (DO NOT CHANGE)
 # TODO: Fit random forest with interaction depth 1
 
-gbm_1 = gbm(theftrate ~ .,
+gbm_1 = gbm(theftrate ~ . -fips,
               distribution = "gaussian",
               n.trees = 1000,
               interaction.depth = 1,
@@ -54,10 +54,10 @@ gbm_1 = gbm(theftrate ~ .,
               cv.folds = 5,
               data = theft_train)
 
-set.seed(1) # for reproducibility (DO NOT CHANGE)
+set.seed(471) # for reproducibility (DO NOT CHANGE)
 # TODO: Fit random forest with interaction depth 2
 
-gbm_2 = gbm(theftrate ~ .,
+gbm_2 = gbm(theftrate ~ . -fips,
               distribution = "gaussian",
               n.trees = 1000,
               interaction.depth = 2,
@@ -65,11 +65,11 @@ gbm_2 = gbm(theftrate ~ .,
               cv.folds = 5,
               data = theft_train)
 
-set.seed(1) # for reproducibility (DO NOT CHANGE)
+set.seed(471) # for reproducibility (DO NOT CHANGE)
 # TODO: Fit random forest with interaction depth 3
 
 
-gbm_3 = gbm(theftrate ~ .,
+gbm_3 = gbm(theftrate ~ . -fips,
               distribution = "gaussian",
               n.trees = 1000,
               interaction.depth = 3,
@@ -117,9 +117,9 @@ i. (4 points) Print the first ten rows of the relative influence table for the o
 **Solution:**
 
 ```{r relinf}
-gbm_fit_optimal = gbm_1
+gbm_fit_optimal = gbm_3
 optimal_num_trees = gbm.perf(gbm_1, plot.it = FALSE) 
-summary(gbm_1, n.trees = optimal_num_trees, plotit = FALSE) %>% tibble() %>%
+summary(gbm_3, n.trees = optimal_num_trees, plotit = FALSE) %>% tibble() %>%
   head(10) 
 ```
 
@@ -130,17 +130,46 @@ ii. (4 points) Produce partial dependence plots for the top three features based
 **Solution:**
 
 ```{r pd1, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "Partial Dependence Plot for Explamation Point.", fig.pos = "H"}
-plot(gbm_3, i.var = "unemp_bens_possible", 
+plot(gbm_3, i.var = "housing_density", 
      n.trees = optimal_num_trees)
 ```
 
 ```{r pd2, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "Partial Dependence Plot for Dollar Sign.", fig.pos = "H"}
-plot(gbm_3, i.var = "pertrump", 
+plot(gbm_3, i.var = "poor_fair_health", 
      n.trees = optimal_num_trees)
 
 ```
 
 ```{r pd3, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "Partial Dependence Plot for 'remove'.", fig.pos = "H"}
-plot(gbm_3, i.var = "housing_density", n.trees = 
+plot(gbm_3, i.var = "pertrump", n.trees = 
        optimal_num_trees) 
+```
+
+```{r pd3, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "Partial Dependence Plot for 'remove'.", fig.pos = "H"}
+plot(gbm_3, i.var = "PctEmpFIRE", n.trees = 
+       optimal_num_trees) 
+```
+
+
+
+```{r pd3, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "Partial Dependence Plot for 'remove'.", fig.pos = "H"}
+plot(gbm_3, i.var = "saversperpop", n.trees = 
+       optimal_num_trees) 
+```
+
+```{r pd3, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "Partial Dependence Plot for 'remove'.", fig.pos = "H"}
+plot(gbm_3, i.var = "pop_density", n.trees = 
+       optimal_num_trees) 
+```
+
+```{r pd3, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "Partial Dependence Plot for 'remove'.", fig.pos = "H"}
+plot(gbm_3, i.var = "unemp_bens_possible", n.trees = 
+       optimal_num_trees) 
+```
+
+```{r}
+
+theftdata = theftdata %>% mutate(weightedtrump = pertrump*pop_density/sum(pop_density))
+  
+ theftdata  %>%  ggplot(aes(x = pertrump, y = med_income)) + geom_smooth() + geom_point()
 ```

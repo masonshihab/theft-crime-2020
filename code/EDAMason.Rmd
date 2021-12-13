@@ -45,5 +45,23 @@ map_data("county") %>%
   theme_void()
 ```
 
-
+```{r}
+map_data("county") %>%
+  as_tibble() %>% 
+  left_join(theftdata %>% 
+              rename(region = state, 
+                     subregion = county,
+                     `Trump Support` = pertrump) %>% 
+              mutate(region = str_to_lower(region), 
+                     subregion = str_to_lower(subregion)), 
+            by = c("region", "subregion")) %>%
+  ggplot() + 
+  geom_polygon(data=map_data("state"), 
+               aes(x=long, y=lat, group=group),
+               color="black", fill=NA,  size = 1, alpha = .3) + 
+  geom_polygon(aes(x=long, y=lat, group=group, fill = `Trump Support`),
+               color="darkblue", size = .1) +
+  scale_fill_gradient(low = "blue", high = "red") +
+  theme_void()
+```
 

@@ -99,12 +99,12 @@ responsekey = keyfile2 %>%  inner_join(response, by = "County_State") %>% select
 ## final merging
 
 ```{r}
-merge9incar = read_csv("../data/clean/merge9incar.csv")
+merge12incar = read_csv("../data/clean/merge12incar.csv")
 
 ```
 
 ```{r}
-merge_with_response = merge9incar %>% inner_join(responsekey, by = "fips") %>% mutate(theftrate = Total_Theft/totalpop, .keep = "unused") %>% drop_na()
+merge_with_response = merge12incar %>% inner_join(responsekey, by = "fips") %>% mutate(theftrate = Total_Theft/totalpop, .keep = "unused") %>% drop_na()
 
 merge_with_response$county = removeWords(merge_with_response$county, stopwords3)
 
