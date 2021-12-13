@@ -37,12 +37,12 @@ theft_test = theftdata %>% filter(!(row_number() %in% train_samples))%>% select(
 ```{r, cache=TRUE}
 set.seed(471) # set seed for reproducibility
 
-mvalues = seq(1,13, by = 1)
+mvalues = seq(3,15, by = 1)
 oob_errors = numeric(length(mvalues))
 ntree = 500
 for(idx in 1:length(mvalues)){
   m = mvalues[idx]
-  rf_fit = randomForest(theftrate ~ ., mtry = m, data = theft_train)
+  rf_fit = randomForest(theftrate ~. -fips, mtry = m, data = theft_train)
   oob_errors[idx] = rf_fit$mse[ntree]
 }
 tibble(m = mvalues, oob_err = oob_errors) %>%
@@ -53,14 +53,15 @@ tibble(m = mvalues, oob_err = oob_errors) %>%
 ```
 
 ```{r}
-rf_4 = randomForest(theftrate ~ ., mtry = 4, data = theft_train)
+set.seed(471) # set seed for reproducibility
+rf_6 = randomForest(theftrate ~ .-fips, mtry = 4, data = theft_train)
 ```
 
 ```{r}
-rf_4$importance 
+rf_6$importance 
 ```
 
 ```{r}
-varImpPlot(rf_4,n.var = 10)
+varImpPlot(rf_6,n.var = 10)
 ```
 

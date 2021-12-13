@@ -1,0 +1,44 @@
+---
+title: "ridge-E"
+author: "Elinor chu"
+date: "12/12/2021"
+output: html_document
+---
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(glmnetUtils)
+```
+
+```{r}
+source("../code/functions/plot_glmnet.R")
+```
+
+```{r}
+theftdata=read_csv("../data/clean/dataclean.csv")
+```
+
+# Ridge
+```{r}
+set.seed(471) # set seed for reproducibility
+train_samples = sample(1:nrow(theftdata), round(0.8*nrow(theftdata)))
+theft_train = theftdata %>% filter(row_number() %in% train_samples) %>% select(-county,-state)
+theft_test = theftdata %>% filter(!(row_number() %in% train_samples))%>% select(-county,-state)
+```
+
+```{r}
+set.seed(471) # set seed for reproducibility
+ridge_fit = cv.glmnet(theftrate ~ .-fips,  # formula notation, as usual
+                      alpha = 0,                 # alpha = 0 for ridge
+                      nfolds = 10,               # number of folds
+                      data = theft_train)   # data to run ridge on
+```
+
+```{r}
+plot(ridge_fit)
+```
+
+```{r}
+plot_glmnet(ridge_fit, theft_train, features_to_plot = 8)
+```
+
