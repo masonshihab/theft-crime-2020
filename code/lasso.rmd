@@ -27,25 +27,10 @@ library(glmnetUtils) # boosting
 source("functions/plot_glmnet.R")
 ```
 
-
-```{r}
-theftdata = read.csv("../data/clean/dataclean.csv") %>% as.data.frame() %>% select(-county, -state,)
-```
-
-```{r}
-theft_samples = sample(1:nrow(theftdata), round(0.8*nrow(theftdata))) 
-theft_train = theftdata %>% filter(row_number() %in% train_samples)
-theft_test = theftdata %>% filter(!(row_number() %in% train_samples))
-```
-
-
-
-
-
 ```{r, message = FALSE}
 set.seed(471) # set seed before cross-validation for reproducibility
 
-lasso_fit = cv.glmnet(theftrate ~ . -fips, alpha = 1, nfolds = 10, data = theft_train) 
+lasso_fit = cv.glmnet(theftrate ~. -state -county -fips , alpha = 1, nfolds = 10, data = theft_train) 
 ```
 
 ```{r lasso-cv-plot, echo = FALSE, fig.width = 6, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "This is the CV plot for the 10-fold cross-validated lasso regression model on the training data.", fig.pos = "H"}

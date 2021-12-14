@@ -22,13 +22,13 @@ library(stringr)
 ```
 
 ```{r}
-theftdata = read.csv("../data/clean/dataclean.csv")
+theft_train = read.csv("../data/clean/theft_train.csv")
 ```
 
 ```{r}
 map_data("county") %>%
   as_tibble() %>% 
-  left_join(theftdata %>% 
+  left_join(theft_train %>% 
               rename(region = state, 
                      subregion = county,
                      `Theft Rate` = theftrate) %>% 
@@ -48,7 +48,7 @@ map_data("county") %>%
 ```{r}
 map_data("county") %>%
   as_tibble() %>% 
-  left_join(theftdata %>% 
+  left_join(theft_train %>% 
               rename(region = state, 
                      subregion = county,
                      `Trump Support` = pertrump) %>% 
