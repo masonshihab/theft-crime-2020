@@ -1,0 +1,17 @@
+---
+title: "Correlation"
+author: "Mason Shihab"
+date: "12/15/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+theft_train = read.csv('../data/clean/theft_train.csv')
+
+theft_train_cor = theft_train %>% select(-state, -county, -fips)
+```
+

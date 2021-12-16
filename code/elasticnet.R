@@ -56,7 +56,7 @@ plot_glmnet(elnet_fit_best, theft_train)
 plot_glmnet(elnet_fit_best, theft_train, features_to_plot = 10)
 
 
-## ----lasso-nonzero-std-coefficients-table-----------------------------------------------------------------------------------------------------
+## ----nonzero-std-coefficients-table-----------------------------------------------------------------------------------------------------
 extract_std_coefs(elnet_fit_best, theft_train) %>% 
   filter(coefficient != 0) %>% arrange(desc(abs(coefficient)))
 

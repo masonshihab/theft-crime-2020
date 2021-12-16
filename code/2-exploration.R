@@ -4,60 +4,241 @@ library(cowplot)                        # for side by side plots
 library(lubridate)                      # for dealing with dates
 library(maps)                           # for creating maps
 library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(usdata)
+library(tm)
+library(stringr)
+library(gbm)
+library(glmnetUtils)
 
 # read in the cleaned data
-covid_data = read_tsv("data/clean/covid_data.tsv")
+theft_train = read_csv("../data/clean/theft_train.csv")
 
-# calculate median case fatality rate
-median_case_fatality_rate = covid_data %>%
-  summarise(median(case_fatality_rate)) %>%
-  pull()
 
-# create histogram of case fatality rate
-p = covid_data %>%
-  ggplot(aes(x = case_fatality_rate)) + 
-  geom_histogram() +
-  geom_vline(xintercept = median_case_fatality_rate,
-             linetype = "dashed") +
-  labs(x = "Case fatality rate (percent)", 
-       y = "Number of counties") +
-  theme_bw()
 
-# save the histogram
-ggsave(filename = "results/response-histogram.png", 
-       plot = p, 
-       device = "png", 
-       width = 5, 
-       height = 3)
+# Regression-Based Models 
 
-# examine top 10 counties by case fatality rate
-covid_data %>% 
-  select(county, state, case_fatality_rate) %>%
-  arrange(desc(case_fatality_rate)) %>%
-  head(10) %>%
-  write_tsv("results/top-10-counties-data.tsv")
+## Lasso Regression
 
-# create a heatmap of case fatality rate across the U.S.
-p = map_data("county") %>%
-  as_tibble() %>% 
-  left_join(case_data %>% 
-              rename(region = state, 
-                     subregion = county,
-                     `Case Fatality Rate` = case_fatality_rate) %>% 
-              mutate(region = str_to_lower(region), 
-                     subregion = str_to_lower(subregion)), 
-            by = c("region", "subregion")) %>%
-  ggplot() + 
-  geom_polygon(data=map_data("state"), 
-               aes(x=long, y=lat, group=group),
-               color="black", fill=NA,  size = 1, alpha = .3) + 
-  geom_polygon(aes(x=long, y=lat, group=group, fill = `Case Fatality Rate`),
-               color="darkblue", size = .1) +
-  scale_fill_gradient(low = "blue", high = "red") +
-  theme_void()
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+# install.packages("scales")              # dependency of plot_glmnet
+source("functions/plot_glmnet.R")
 
-ggsave(filename = "results/response-map.png", 
-       plot = p, 
-       device = "png", 
-       width = 7, 
-       height = 4)
+
+## ---- message = FALSE-------------------------------------------------------------------------------------------------------------------------
+set.seed(471) # set seed before cross-validation for reproducibility
+
+lasso_fit = cv.glmnet(theftrate ~. -state -county -fips , alpha = 1, nfolds = 10, data = theft_train) 
+
+
+## ----lasso-cv-plot, echo = FALSE, fig.width = 6, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "This is the CV plot for the 10-fold cross-validated lasso regression model on the training data.", fig.pos = "H"----
+plot(lasso_fit)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+lambda_lasso = lasso_fit$lambda.1se
+sprintf("The value of lambda based on the one-standard-error rule: %f",
+        lambda_lasso)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+num_features = lasso_fit$nzero[lasso_fit$lambda == lasso_fit$lambda.1se]
+sprintf("The number of features (excluding intercept) selected (1se): %i", 
+        num_features)
+
+
+## ----lasso-nonzero-std-coefficients-table-----------------------------------------------------------------------------------------------------
+extract_std_coefs(lasso_fit, theft_train) %>% 
+  filter(coefficient != 0) %>% arrange(desc(coefficient))
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(lasso_fit, theft_train)
+
+
+## Elastic Net
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit = cva.glmnet(theftrate ~ . -fips -county -state, # formula notation, as usual
+                       nfolds = 10,               # number of folds
+                       data = theft_train)   # data to run on
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit$alpha
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot_cva_glmnet(elnet_fit)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit_best = extract_best_elnet(elnet_fit)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit_best$alpha
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(elnet_fit_best)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(elnet_fit_best, theft_train)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(elnet_fit_best, theft_train, features_to_plot = 10)
+
+
+## ----nonzero-std-coefficients-table-----------------------------------------------------------------------------------------------------
+extract_std_coefs(elnet_fit_best, theft_train) %>% 
+  filter(coefficient != 0) %>% arrange(desc(abs(coefficient)))
+
+
+
+# Tree-Based Models
+
+## Boosting
+
+
+gbm_1 = gbm(theftrate ~ . -fips -state -county,
+            distribution = "gaussian",
+            n.trees = 1000,
+            interaction.depth = 1,
+            shrinkage = 0.1,
+            cv.folds = 5,
+            data = theft_train)
+
+set.seed(471) # for reproducibility (DO NOT CHANGE)
+# TODO: Fit random forest with interaction depth 2
+
+gbm_2 = gbm(theftrate ~ . -fips -state -county,
+            distribution = "gaussian",
+            n.trees = 1000,
+            interaction.depth = 2,
+            shrinkage = 0.1,
+            cv.folds = 5,
+            data = theft_train)
+
+set.seed(471) # for reproducibility (DO NOT CHANGE)
+# TODO: Fit random forest with interaction depth 3
+
+
+gbm_3 = gbm(theftrate ~ . -fips -state -county,
+            distribution = "gaussian",
+            n.trees = 1000,
+            interaction.depth = 3,
+            shrinkage = 0.1,
+            cv.folds = 5,
+            data = theft_train)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+ntrees = 1000
+cv_errors = bind_rows(
+  tibble(ntree = 1:ntrees, cv_err = gbm_1$cv.error, Depth = 1),
+  tibble(ntree = 1:ntrees, cv_err = gbm_2$cv.error, Depth = 2),
+  tibble(ntree = 1:ntrees, cv_err = gbm_3$cv.error, Depth = 3)
+) %>% mutate(Depth = factor(Depth))
+
+# plot CV errors
+
+mins = cv_errors %>% group_by(Depth) %>% summarise(min_err = min(cv_err))
+
+gbm.perf(gbm_3, plot.it = FALSE)
+
+
+## ----deptherr, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "CV Error by Trees and Interaction Depth (with min error for each depth dashed)", fig.pos = "H"----
+cv_errors %>%
+  ggplot(aes(x = ntree, y = cv_err, colour = Depth)) +
+  geom_line() + theme_bw() + 
+  geom_hline(aes(yintercept = min_err, color = Depth), 
+             data = mins, linetype = "dashed") + 
+  labs(y = "CV Error", x = "Trees") + scale_y_log10()
+
+
+## ----relinf-----------------------------------------------------------------------------------------------------------------------------------
+gbm_fit_optimal = gbm_3
+optimal_num_trees = gbm.perf(gbm_1, plot.it = FALSE) 
+summary(gbm_3, n.trees = optimal_num_trees, plotit = FALSE) %>% tibble() %>%
+  head(10) 
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(gbm_3, i.var = "housing_density", 
+     n.trees = optimal_num_trees)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(gbm_3, i.var = "poor_fair_health", 
+     n.trees = optimal_num_trees)
+
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(gbm_3, i.var = "pertrump", n.trees = 
+       optimal_num_trees) 
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(gbm_3, i.var = "PctEmpFIRE", n.trees = 
+       optimal_num_trees) 
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(gbm_3, i.var = "saversperpop", n.trees = 
+       optimal_num_trees) 
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(gbm_3, i.var = "pop_density", n.trees = 
+       optimal_num_trees) 
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(gbm_3, i.var = "unemp_bens_possible", n.trees = 
+       optimal_num_trees) 
+
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit = cva.glmnet(theftrate ~ . -fips -county -state, # formula notation, as usual
+                       nfolds = 10,               # number of folds
+                       data = theft_train)   # data to run on
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit$alpha
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot_cva_glmnet(elnet_fit)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit_best = extract_best_elnet(elnet_fit)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit_best$alpha
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot(elnet_fit_best)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(elnet_fit_best, theft_train)
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(elnet_fit_best, theft_train, features_to_plot = 10)
+
+
+
