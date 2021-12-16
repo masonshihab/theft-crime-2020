@@ -13,9 +13,8 @@ library(tidyverse)
 ```{r}
 theft_train=read_csv("../data/clean/theft_train.csv")
 
-theft_train = theft_train%>% select(-fips, -state, -county)
+theft_train = theft_train%>% select(-fips, -state, -county,-theftrate)
 
-theft_train[sapply(theft_train, is.infinite)] <- 0
 ```
 
 
@@ -24,14 +23,6 @@ theft_train[sapply(theft_train, is.infinite)] <- 0
 M = cor(theft_train)
 ```
 
-```{r}
-corrplot(M, method = 'square', diag = FALSE, order = 'hclust',tl.cex = 0.4,
-         addrect = 3, rect.col = 'blue', rect.lwd = 3, tl.pos = 'd')
-```
-
-```{r}
-corrplot(M, method = 'circle', order = 'hclust', addrect = 2, tl.cex = 0.4)
-```
 
 ```{r}
 corrplot(M, type = 'lower', order = 'hclust', tl.col = 'black',
