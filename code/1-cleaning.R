@@ -77,17 +77,8 @@ census_wider = census_step %>%
              dis5to17 = (dis5to17male + dis5to17female)/totalpop,
              dis18to34 = (dis18to34male + dis18to34female)/totalpop,             
              dis35to64 = (dis35to64male + dis35to64female)/totalpop,
-           ) %>% 
-<<<<<<< HEAD
-  select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -dis5to17male, -dis5to17female, -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
-=======
-  select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -dis5to17male, -dis5to17female, 
-<<<<<<< HEAD
-         -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
->>>>>>> 90a57e928f025f17333ad51b83042d09ce105d21
-=======
-         -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female, -households)
->>>>>>> e6ff9b3d668e7c94301ab15e245bf1472725d10d
+           ) %>% select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -dis5to17male, -dis5to17female, -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
+
 ACS_vars = drop_na(census_wider)
 
 
@@ -268,11 +259,11 @@ file = "../data/raw/irstiny.csv"
 irs_raw = read_csv(file)
 
 irs_raw = irs_raw%>%select(zipcode, N07240)%>% mutate(zip = as.numeric(zipcode),saverscredit = N07240)%>%select(-zipcode,-N07240) %>% group_by(zip) %>% summarise(saverscredit = sum(saverscredit))%>%ungroup()
-<<<<<<< HEAD
+
 irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saversperhouse=saverscredit/households)%>% select(-households)
-=======
+
 irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saversperhouses=saverscredit/households) %>% select(-households)
->>>>>>> 90a57e928f025f17333ad51b83042d09ce105d21
+
 
 
 
@@ -285,6 +276,8 @@ key_zip_county = key_zip_county %>% rename(zip=ZIP, county=COUNTYNAME, fips=STCO
 irs_joined = key_zip_county%>%inner_join(irs_clean, by="zip")
 
 irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperhouses = mean(saversperhouses)) %>% ungroup() %>% mutate(fips=as.numeric(fips))
+
+irs_final[sapply(irs_final, is.infinite)] <- 0
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -325,6 +318,6 @@ merge11=merge10 %>%inner_join(atlas_income_raw,by="fips") %>% drop_na()
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-write.csv(merge11, file = "../data/clean/merge11.csv", row.names = FALSE)
+write.csv(merge11, file = "../data/clean/merge11fix.csv", row.names = FALSE)
 
 
