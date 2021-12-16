@@ -1,0 +1,66 @@
+---
+title: ""
+author: "Mason Shihab"
+date: "3/13/2021"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(usdata)
+library(tm)
+library(stringr)
+library(gbm)
+library(glmnetUtils) # boosting
+```
+
+```{r}
+# install.packages("scales")              # dependency of plot_glmnet
+source("functions/plot_glmnet.R")
+```
+
+```{r, message = FALSE}
+set.seed(471) # set seed before cross-validation for reproducibility
+
+lasso_fit = cv.glmnet(theftrate ~. -state -county -fips , alpha = 1, nfolds = 10, data = theft_train) 
+```
+
+```{r lasso-cv-plot, echo = FALSE, fig.width = 6, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "This is the CV plot for the 10-fold cross-validated lasso regression model on the training data.", fig.pos = "H"}
+plot(lasso_fit)
+```
+
+```{r}
+lambda_lasso = lasso_fit$lambda.1se
+sprintf("The value of lambda based on the one-standard-error rule: %f",
+        lambda_lasso)
+```
+
+**In Figure \@ref(fig:lasso-cv-plot), we have the CV plot for a 10-fold cross-validated lasso regression model to the training data. (We can also note that corresponding to the right vertical dashed line on the plot (on the log scale), the value of lambda selected according to the one-standard-error rule is about 0.009.)**
+
+ii. How many features (excluding the intercept) are selected if lambda is chosen according to the one-standard-error rule?
+
+```{r}
+num_features = lasso_fit$nzero[lasso_fit$lambda == lasso_fit$lambda.1se]
+sprintf("The number of features (excluding intercept) selected (1se): %i", 
+        num_features)
+```
+
+**Thus, there are 8 features (excluding the intercept) that are selected if lambda is chosen according to the one-standard-error rule.**
+
+**Although not explicitly asked, we can observe these features with nonzero standardized coefficients in Table \@ref(tab:lasso-nonzero-std-coefficients-table).**
+```{r lasso-nonzero-std-coefficients-table}
+extract_std_coefs(lasso_fit, theft_train) %>% 
+  filter(coefficient != 0) %>% arrange(desc(coefficient))
+```
+```{r}
+plot_glmnet(lasso_fit, theft_train)
+```
+
