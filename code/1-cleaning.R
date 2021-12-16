@@ -11,7 +11,7 @@ library(usdata)
 library(tm)
 library(stringr)
 
-setwd("C:/Users/Mason Shihab/Documents/MBDS/471/final-project-template/code")
+
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -299,7 +299,7 @@ merge9=merge8 %>%inner_join(atlas_people_raw,by="fips") %>% drop_na()
 file = "../data/raw/Jobs.csv"
 atlas_jobs_raw = read_csv(file)
 
-atlas_jobs_raw = atlas_jobs_raw %>% select(FIPS, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrade, PctEmpInformation, PctEmpFIRE) %>% rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
+atlas_jobs_raw = atlas_jobs_raw %>% select(FIPS, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrans, PctEmpInformation, PctEmpFIRE) %>% rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------

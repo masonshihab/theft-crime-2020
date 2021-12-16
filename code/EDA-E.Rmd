@@ -23,16 +23,22 @@ library(kableExtra)
 
 ```{r}
 theft_train=read_csv("/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/data/clean/theft_train.csv")
+theft_train[sapply(theft_train, is.infinite)] <- 0
 ```
 
 ```{r}
-ggplot(aes(x = theftrate)) +
+theft_train %>% ggplot(aes(x = theftrate)) +
   geom_histogram()+
   labs(y = "Count", 
        x = "Theft Rate",
        title = "Histogram of Theft Rate")+
+  geom_vline(aes(xintercept = mean(theftrate),colour = "mean"),
+             linetype ="longdash", size = .8)+
+  geom_vline(aes(xintercept = median(theftrate),colour = "median"),
+             linetype ="longdash", size = .8)+
   theme_bw()+
-  scale_y_log10()
+  scale_y_log10()+
+  scale_color_manual(name = "statistics", values = c(median = "blue", mean = "red"))
 ```
 
 ```{r}
