@@ -11,7 +11,7 @@ library(tidyverse)
 library(ggplot2)
 library(readr)
 
-
+getwd()
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 merge11 = read_csv("../data/clean/merge11.csv")
@@ -25,7 +25,7 @@ incar_raw = read_csv(url) %>% select(FIPS, state, county, total_population_20, i
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-incarvars = merge8 %>% inner_join(incar_raw, by = "fips") %>% select(-totalpop) %>% drop_na() %>% as.data.frame()
+incarvars = merge11 %>% inner_join(incar_raw, by = "fips") %>% select(-totalpop) %>% drop_na() %>% as.data.frame()
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -86,5 +86,5 @@ merge12 = merge11 %>% inner_join(incar_final, by = "fips")
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-write.csv(merge12, file = '../data/clean/merge12incar.csv', row.names = FALSE)
+write.csv(merge12, file = "../data/clean/merge12incar.csv", row.names = FALSE)
 

@@ -11,6 +11,8 @@ library(usdata)
 library(tm)
 library(stringr)
 
+setwd("C:/Users/Mason Shihab/Documents/MBDS/471/final-project-template/code")
+
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 var <- load_variables(2019, "acs1", cache = TRUE)
@@ -77,7 +79,7 @@ census_wider = census_step %>%
              dis35to64 = (dis35to64male + dis35to64female)/totalpop,
            ) %>% 
   select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -dis5to17male, -dis5to17female, 
-         -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
+         -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female, -households)
 ACS_vars = drop_na(census_wider)
 
 
@@ -311,5 +313,6 @@ merge11=merge10 %>%inner_join(atlas_income_raw,by="fips") %>% drop_na()
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-write.csv(merge11, file = '../data/clean/merge11.csv', row.names = FALSE)
+write.csv(merge11, file = "../data/clean/merge11.csv", row.names = FALSE)
+
 
