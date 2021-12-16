@@ -22,11 +22,10 @@ library(kableExtra)
 ```
 
 ```{r}
-theft_train=read_csv("../data/clean/theft_train.csv")
+theft_train=read_csv("/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/data/clean/theft_train.csv")
 ```
 
 ```{r}
-theft_train %>% select(-fips, -state, -county) %>%
 ggplot(aes(x = theftrate)) +
   geom_histogram()+
   labs(y = "Count", 

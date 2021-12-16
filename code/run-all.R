@@ -1,7 +1,7 @@
 # run all steps of the analysis pipeline
 
 
-#setwd("C:/Users/Mason Shihab/Documents/MBDS/471/final-project-template/code")
+setwd("C:/Users/Mason Shihab/Documents/MBDS/471/final-project-template/code")
 source("1-cleaning.R")
 source("2.1-imputation.R")
 source("2.2-cleaning2.R")
