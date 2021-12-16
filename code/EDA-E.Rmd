@@ -29,6 +29,9 @@ theft_train=read_csv("../data/clean/theft_train.csv")
 theft_train %>% select(-fips, -state, -county) %>%
 ggplot(aes(x = theftrate)) +
   geom_histogram()+
+  labs(y = "Count", 
+       x = "Theft Rate",
+       title = "Histogram of Theft Rate")+
   theme_bw()+
   scale_y_log10()
 ```
@@ -37,6 +40,8 @@ ggplot(aes(x = theftrate)) +
 theft_train %>% select(-fips, -state, -county) %>%
 ggplot(aes(y=theftrate)) +
   geom_boxplot()+
+  labs(y = "Theft Rate",
+       title = "Boxplot of Theft Rate")+
   theme_bw()
 ```
 
@@ -53,17 +58,18 @@ theft_train %>% select(state,county,theftrate) %>% arrange(desc(theftrate)) %>% 
 
 #EDA for important features
 
+
 ```{r}
 # plot theftrate against poor_fair_health
 p1 = theft_train %>% select(-fips, -state, -county) %>% 
   ggplot(aes(x = poor_fair_health, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "Poor/Fair Health", 
+  labs(x = "Percent adults reporting poor or fair health", 
        y = "Theft Rate",
-       title = "Poor/Fair Health") +
+       title = "Percentage of Adults Reporting\n Fair or Poor Health vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -78,13 +84,13 @@ theft_train %>% arrange(desc(poor_fair_health))%>%head(5)
 # plot theftrate against housing_density
 p2 = theft_train %>% select(-fips, -state, -county)%>%
   ggplot(aes(x = housing_density, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
   labs(x = "Housing Density", 
        y = "Theft Rate",
-       title = "Housing Density") +
+       title = "Housing Density vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -99,13 +105,13 @@ theft_train %>% arrange(desc(housing_density))%>%head(5)
 # plot theftrate against pop_density
 p3 = theft_train %>% select(-fips, -state, -county) %>%
   ggplot(aes(x = pop_density, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
   labs(x = "Population Density", 
        y = "Theft Rate",
-       title = "Population Density") +
+       title = "Population Density vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -119,13 +125,13 @@ theft_train %>% arrange(desc(pop_density))%>%head(5)
 # plot theftrate against pertrump
 p4 = theft_train %>% select(-fips, -state, -county)%>%
   ggplot(aes(x = pertrump, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "Pertrump", 
+  labs(x = "Percent of Trump Supporters", 
        y = "Theft Rate",
-       title = "Pertrump") +
+       title = "Percent of Trump Supporters (in 2020) vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -139,13 +145,13 @@ theft_train %>% arrange(desc(pertrump))%>%head(5)
 # plot theftrate against PctEmpFIRE
 p5 = theft_train %>% select(-fips, -state, -county)%>%
   ggplot(aes(x = PctEmpFIRE, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "PctEmpFIRE", 
+  labs(x = "Percent of People Employed in FIRE", 
        y = "Theft Rate",
-       title = "PctEmpFIRE") +
+       title = "Percent of People Employed in \n Finance/Insurance/Real Estate(FIRE) vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -159,7 +165,7 @@ theft_train %>% arrange(desc(PctEmpFIRE))%>%select(state, county, PctEmpFIRE, th
 # plot theftrate against saversperpop
 p6 = theft_train %>% select(-fips, -state, -county)%>%
   ggplot(aes(x = saversperpop, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
@@ -180,13 +186,13 @@ theft_train %>% arrange(desc(saversperpop))%>%select(state, county, saversperpop
 # plot theftrate against unemp_bens_possible
 p7 = theft_train %>% select(-fips, -state, -county)%>%
   ggplot(aes(x = unemp_bens_possible, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "unemp_bens_possible", 
+  labs(x = "State unemployment insurance", 
        y = "Theft Rate",
-       title = "unemp_bens_possible") +
+       title = "State Unemployment Insurance vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -197,13 +203,13 @@ p7 = theft_train %>% select(-fips, -state, -county)%>%
 # plot theftrate against lessthan_hs
 p8= theft_train %>% select(-fips, -state, -county)%>%
   ggplot(aes(x = lessthan_hs, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "lessthan_hs", 
+  labs(x = "Percent with less than HS education", 
        y = "Theft Rate",
-       title = "lessthan_hs") +
+       title = "Percent of people with Less than High School\n Education vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -212,21 +218,25 @@ p8= theft_train %>% select(-fips, -state, -county)%>%
 theft_train %>% arrange(desc(lessthan_hs))%>%select(state, county, lessthan_hs, theftrate)%>%head(5)
 ```
 
+
 ```{r}
 # plot theftrate against PctEmpConstruction
 p9= theft_train %>% select(-fips, -state, -county)%>%
   ggplot(aes(x = PctEmpConstruction, y = theftrate)) +
-  geom_point() + 
+  geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "PctEmpConstruction", 
+  labs(x = "Percent employed in construction", 
        y = "Theft Rate",
-       title = "PctEmpConstruction") +
+       title = "Percent of People Employed in Construction") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
+
+
 ```{r}
 theft_train %>% arrange(desc(PctEmpConstruction))%>%select(state, county, PctEmpConstruction, theftrate)%>%head(5)
 ```
+
 
