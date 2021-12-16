@@ -65,14 +65,19 @@ census_step = census_data %>%
 census_wider = census_step %>% 
   mutate(permale = permale/totalpop, 
          bachplus = bachplus/totalpop, unemployed_rate = unemployed/(employed+unemployed), employed_rate = employed/(employed+unemployed),
-         foodstamp = foodstamp/totalpop, no_health_ins = 
+         foodstamp = foodstamp/households, no_health_ins = 
            (ilefnhi+ilufnhi+nilfnhi)/totalpop, single_mom = 
-           single_mom/households, lessthan_hs = lessthan_hs/totalpop, incschool = inschool/totalpop, ingradprofesh = ingradprofesh/totalpop, inundergrad = inundergrad/totalpop, Marriedcouplefamily = Marriedcouplefamily/households, withkids = withkids/households, singledad = singledad/households, divorced = divorced/totalpop, widowed = widowed/totalpop, nevermarried = nevermarried/totalpop, foreignborn = foreignborn/totalpop, fromdifstate = fromdifstate/totalpop, fromabroad = fromabroad/totalpop) %>% mutate(
+           single_mom/households, lessthan_hs = lessthan_hs/totalpop, 
+         inschool = inschool/totalpop, ingradprofesh = ingradprofesh/totalpop, inundergrad = 
+           inundergrad/totalpop, Marriedcouplefamily = Marriedcouplefamily/households, withkids = withkids/households, singledad = 
+           singledad/households, divorced = divorced/totalpop, widowed = widowed/totalpop, nevermarried = 
+           nevermarried/totalpop, foreignborn = foreignborn/totalpop, fromdifstate = fromdifstate/totalpop, fromabroad = fromabroad/totalpop) %>% mutate(
              dis5to17 = (dis5to17male + dis5to17female)/totalpop,
              dis18to34 = (dis18to34male + dis18to34female)/totalpop,             
              dis35to64 = (dis35to64male + dis35to64female)/totalpop,
            ) %>% 
-  select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -households, -dis5to17male, -dis5to17female, -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
+  select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -dis5to17male, -dis5to17female, 
+         -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
 ACS_vars = drop_na(census_wider)
 
 
@@ -253,7 +258,7 @@ file = "../data/raw/irstiny.csv"
 irs_raw = read_csv(file)
 
 irs_raw = irs_raw%>%select(zipcode, N07240)%>% mutate(zip = as.numeric(zipcode),saverscredit = N07240)%>%select(-zipcode,-N07240) %>% group_by(zip) %>% summarise(saverscredit = sum(saverscredit))%>%ungroup()
-irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saversperpop=saverscredit/totalpop)
+irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saversperhouses=saverscredit/households) %>% select(-households)
 
 
 
