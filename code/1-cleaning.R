@@ -242,7 +242,7 @@ merge7 = merge6 %>% inner_join(unemp_bens, by = "state")
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-census_data_zip <- get_acs(geography = "zcta", variables = c(totalpop = "B01003_001"), 
+census_data_zip <- get_acs(geography = "zcta", variables = c(totalpop = "B01003_001", households = "B11001_002"), 
                            year = 2018)
 
 
@@ -270,7 +270,7 @@ key_zip_county = key_zip_county %>% rename(zip=ZIP, county=COUNTYNAME, fips=STCO
 
 irs_joined = key_zip_county%>%inner_join(irs_clean, by="zip")
 
-irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperpop = mean(saversperpop)) %>% ungroup() %>% mutate(fips=as.numeric(fips))
+irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperhouses = mean(saversperhouses)) %>% ungroup() %>% mutate(fips=as.numeric(fips))
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------

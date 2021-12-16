@@ -1,10 +1,13 @@
 # run all steps of the analysis pipeline
 
-source("code/1-cleaning.R")
-source("code/2.1-imputation.R")
-source("code/2.2-cleaning2.R")
-source("code/2.3-train-test-split.R")
-#source("code/2-exploration.R")
-#source("code/4-regression-modeling.R")
-#source("code/5-tree-modeling.R")
-#source("code/6-model-evaluation.R")
+
+#setwd("C:/Users/Mason Shihab/Documents/MBDS/471/final-project-template/code")
+source("1-cleaning.R")
+source("2.1-imputation.R")
+source("2.2-cleaning2.R")
+source("2.3-train-test-split.R")
+source("2-exploration.R")
+#source("4-regression-modeling.R")
+#source("5-tree-modeling.R")
+#source("6-model-evaluation.R")
+
