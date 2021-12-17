@@ -17,6 +17,7 @@ library(usdata)
 library(tm)
 library(stringr)
 library(kableExtra)
+library(corrplot)
 ```
 
 
@@ -167,6 +168,8 @@ p1 = theft_train %>% select(-fips, -state, -county) %>%
        title = "Percentage of Adults Reporting\n Fair or Poor Health vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p1
 ```
 
 ```{r}
@@ -188,6 +191,8 @@ p2 = theft_train %>% select(-fips, -state, -county)%>%
        title = "Housing Density vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p2
 ```
 
 
@@ -209,6 +214,8 @@ p3 = theft_train %>% select(-fips, -state, -county) %>%
        title = "Population Density vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p3
 ```
 
 ```{r}
@@ -229,6 +236,8 @@ p4 = theft_train %>% select(-fips, -state, -county)%>%
        title = "Percent of Trump Supporters (in 2020) vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p4
 ```
 
 ```{r}
@@ -249,6 +258,8 @@ p5 = theft_train %>% select(-fips, -state, -county)%>%
        title = "Percent of People Employed in \n Finance/Insurance/Real Estate(FIRE) vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p5
 ```
 
 ```{r}
@@ -257,23 +268,25 @@ theft_train %>% arrange(desc(PctEmpFIRE))%>%select(state, county, PctEmpFIRE, th
 
 
 ```{r}
-# plot theftrate against saversperpop
+# plot theftrate against saversperhouses
 p6 = theft_train %>% select(-fips, -state, -county)%>%
-  ggplot(aes(x = saversperpop, y = theftrate)) +
+  ggplot(aes(x = saversperhouses, y = theftrate)) +
   geom_point(alpha = 0.6) + 
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "saversperpop", 
+  labs(x = "saversperhouses", 
        y = "Theft Rate",
-       title = "saversperpop") +
+       title = "Percent of people qualifying for\n Saver's Credit vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p6
 ```
 
 
 ```{r}
-theft_train %>% arrange(desc(saversperpop))%>%select(state, county, saversperpop, theftrate)%>%head(5)
+theft_train %>% arrange(desc(saversperhouses))%>%select(state, county, saversperhouses, theftrate)%>%head(5)
 ```
 
 
@@ -290,6 +303,8 @@ p7 = theft_train %>% select(-fips, -state, -county)%>%
        title = "State Unemployment Insurance vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p7
 ```
 
 
@@ -307,6 +322,8 @@ p8= theft_train %>% select(-fips, -state, -county)%>%
        title = "Percent of people with Less than High School\n Education vs Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p8
 ```
 
 ```{r}
@@ -327,6 +344,8 @@ p9= theft_train %>% select(-fips, -state, -county)%>%
        title = "Percent of People Employed in Construction") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
+
+p9
 ```
 
 
