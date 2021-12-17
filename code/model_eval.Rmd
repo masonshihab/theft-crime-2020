@@ -393,6 +393,6 @@ tibble(Ridge = ridge_RMSE, Lasso = lasso_RMSE, `Intercept-only` = constant_RMSE,
 ```
 
 ```{r}
-Response_Mean
+mean(theft_test$theftrate)
 ```
 
