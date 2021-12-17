@@ -29,8 +29,10 @@ source("functions/plot_glmnet.R")
 ```
 
 ```{r}
-theft_train = read_csv("../data/clean/theft_train.csv")
+theft_train = read_csv("../data/clean/theft_train.csv") 
+theft_test = read_csv("../data/clean/theft_test.csv") 
 ```
+
 
 
 # Regression Based Methods
@@ -39,7 +41,7 @@ theft_train = read_csv("../data/clean/theft_train.csv")
 
 ```{r cache=TRUE}
 set.seed(471) # set seed for reproducibility
-ridge_fit = cv.glmnet(theftrate ~ .-fips,  # formula notation, as usual
+ridge_fit = cv.glmnet(theftrate ~ .-fips -state -county,  # formula notation, as usual
                       alpha = 0,                 # alpha = 0 for ridge
                       nfolds = 10,               # number of folds
                       data = theft_train)   # data to run ridge on
@@ -97,8 +99,8 @@ plot_glmnet(lasso_fit, theft_train)
 ## Elastic net 
 
 Next, let's run an elastic net regression. We can do this via the `cva.glmnet()` function:
-```{r cache=TRUE}
-elnet_fit = cva.glmnet(theftrate ~ . -fips -county -state, # formula notation, as usual
+```{r}
+elnet_fit = cva.glmnet(theftrate ~ .-fips -county -state, # formula notation, as usual
                        nfolds = 10,               # number of folds
                        data = theft_train)   # data to run on
 ```
@@ -146,6 +148,19 @@ extract_std_coefs(elnet_fit_best, theft_train) %>%
 ```
 
 
+```{r cache=TRUE}
+set.seed(471) # set seed for reproducibility
+final_elnet_fit = cv.glmnet(theftrate ~ .-fips -state -county,  # formula notation, as usual
+                      alpha = elnet_fit_best$alpha,           
+                      nfolds = 10,               # number of folds
+                      data = theft_train)   # data to run ridge on
+```
+
+
+
+
+
+
 
 # Tree based methods
 
@@ -154,12 +169,12 @@ extract_std_coefs(elnet_fit_best, theft_train) %>%
 ```{r, cache=TRUE}
 set.seed(471) # set seed for reproducibility
 
-mvalues = seq(3,15, by = 1)
+mvalues = seq(4,16, by = 1)
 oob_errors = numeric(length(mvalues))
 ntree = 500
 for(idx in 1:length(mvalues)){
   m = mvalues[idx]
-  rf_fit = randomForest(theftrate ~. -fips, mtry = m, data = theft_train)
+  rf_fit = randomForest(theftrate ~. -fips -state - county, mtry = m, data = theft_train)
   oob_errors[idx] = rf_fit$mse[ntree]
 }
 tibble(m = mvalues, oob_err = oob_errors) %>%
@@ -169,17 +184,17 @@ tibble(m = mvalues, oob_err = oob_errors) %>%
   theme_bw()
 ```
 
-```{r}
+```{r cache=TRUE}
 set.seed(471) # set seed for reproducibility
-rf_4 = randomForest(theftrate ~ .-fips, mtry = 4, data = theft_train)
+rf_13 = randomForest(theftrate ~ .-fips -state -county, mtry = 13, data = theft_train)
 ```
 
 ```{r}
-rf_4$importance 
+rf_13$importance 
 ```
 
 ```{r}
-varImpPlot(rf_4,n.var = 10)
+varImpPlot(rf_13,n.var = 10)
 ```
 
 
@@ -269,7 +284,7 @@ cv_errors %>%
 
 ```{r relinf}
 gbm_fit_optimal = gbm_3
-optimal_num_trees = gbm.perf(gbm_1, plot.it = FALSE) 
+optimal_num_trees = gbm.perf(gbm_3, plot.it = FALSE) 
 summary(gbm_3, n.trees = optimal_num_trees, plotit = FALSE) %>% tibble() %>%
   head(10) 
 ```
@@ -302,11 +317,6 @@ plot(gbm_3, i.var = "PctEmpFIRE", n.trees =
 
 
 ```{r}
-plot(gbm_3, i.var = "saversperhouses", n.trees = 
-       optimal_num_trees) 
-```
-
-```{r}
 plot(gbm_3, i.var = "pop_density", n.trees = 
        optimal_num_trees) 
 ```
@@ -317,4 +327,72 @@ plot(gbm_3, i.var = "unemp_bens_possible", n.trees =
 ```
 
 
+
+
+
+
+```{r}
+
+# ridge prediction error
+ridge_predictions = predict(ridge_fit, 
+                            newdata = theft_test, 
+                            s = "lambda.1se") %>% as.numeric()
+
+ridge_RMSE = sqrt(mean((ridge_predictions-theft_test$theftrate)^2))
+
+
+
+# lasso prediction error
+
+lasso_predictions = predict(lasso_fit, 
+                            newdata = theft_test, 
+                            s = "lambda.1se") %>%
+  as.numeric()
+
+lasso_RMSE = sqrt(mean((lasso_predictions-theft_test$theftrate)^2))
+
+
+
+
+# elnet prediction error
+
+elnet_predictions = predict(final_elnet_fit, 
+                            newdata = theft_test, 
+                            s = "lambda.1se") %>%
+  as.numeric()
+
+elnet_RMSE = sqrt(mean((elnet_predictions-theft_test$theftrate)^2))
+
+
+
+# intercept-only prediction error
+training_mean_response = mean(theft_test$theftrate)
+constant_RMSE = sqrt(mean((training_mean_response-theft_test$theftrate)^2))
+
+
+
+#RF
+rf_predictions = predict(rf_13, newdata = theft_test) 
+
+rf_RMSE = sqrt(mean((rf_predictions-theft_test$theftrate)^2))
+
+#Boosting
+gbm_predictions = predict(gbm_3, n.trees = optimal_num_trees,
+                          newdata = theft_test)
+
+gbm_RMSE = sqrt(mean((gbm_predictions-theft_test$theftrate)^2))
+
+
+
+
+# print nice table
+
+
+tibble(Ridge = ridge_RMSE, Lasso = lasso_RMSE, `Intercept-only` = constant_RMSE, 
+       Elastic_Net = elnet_RMSE, Random_Forest = rf_RMSE, Boosting = gbm_RMSE) %>% pivot_longer(everything(), names_to = "Model", values_to = "Test RMSE")
+```
+
+```{r}
+mean(theft_test$theftrate)
+```
 
