@@ -76,35 +76,28 @@ census_wider = census_step %>%
 ACS_vars = drop_na(census_wider)
 
 
-
-
-
-## ---------------------------------------------------------------------------------------------------------------------------------------------
-election = read_csv("../data/raw/president_county_candidate.csv", 
-                    col_types = cols(won = col_skip()))
-
-
-
-election2 = election %>% arrange(state, county) %>% 
-  group_by(state, county) %>% 
-  mutate(pctvote = 100*total_votes/sum(total_votes)) %>% 
-  filter(candidate %in% c("Joe Biden", "Donald Trump"))
-
-election_clean = election2 %>% 
-  pivot_wider(id_cols = c(state, county), 
-              names_from = candidate, values_from = pctvote)
-
-ACS_election = election_clean %>% inner_join(ACS_vars, by = c("state", "county")) %>% select(-`Joe Biden`) %>% rename(pertrump = 'Donald Trump') %>% mutate(pertrump = pertrump/100)
-
-
-
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 keyfile = read_csv("../data/raw/ZIP-COUNTY-FIPS_2017-06.csv") %>% 
   mutate(state_full = abbr2state(STATE),) %>% rename(county = COUNTYNAME, state = state_full, fips = STCOUNTYFP) %>% select(-ZIP) %>% distinct() 
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-ACS_election_key = ACS_election %>% inner_join(keyfile, by = c("state", "county")) %>%  mutate(fips = as.numeric(fips))
+ACS_key = ACS_vars %>% inner_join(keyfile, by = c("state", "county")) %>%  mutate(fips = as.numeric(fips))
+
+
+
+## ---------------------------------------------------------------------------------------------------------------------------------------------
+election = read_csv("../data/raw/County Presidential Election Returns 2000-2020.csv")
+
+
+election2 = election %>% filter(year == 2020, candidate == "DONALD J TRUMP") %>% group_by(county_fips) %>% 
+  summarise(candidatevotes = sum(candidatevotes), totalvotes = sum(totalvotes)) %>% 
+  mutate(pertrump = candidatevotes/totalvotes, .keep = "unused") %>% rename(fips = county_fips)
+
+ACS_election_key = election2 %>% inner_join(ACS_key, by = "fips") 
+
+
+
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -293,7 +286,7 @@ file = "../data/raw/Jobs.csv"
 atlas_jobs_raw = read_csv(file)
 
 atlas_jobs_raw = atlas_jobs_raw %>% 
-  select(FIPS, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrade, PctEmpInformation, PctEmpFIRE) %>% 
+  select(FIPS, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrans, PctEmpInformation, PctEmpFIRE) %>% 
   rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
 
 
