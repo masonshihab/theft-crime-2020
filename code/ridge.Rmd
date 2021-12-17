@@ -8,24 +8,32 @@ output: html_document
 ```{r, echo = FALSE, message = FALSE}
 library(tidyverse)
 library(glmnetUtils)
+library (readr)
 ```
 
 ```{r}
-source("../code/functions/plot_glmnet.R")
+source("/Users/diyangchu/Documents/2-grad@Penn/STAT471/theft-crime-2020/code/functions/plot_glmnet.R")
 ```
 
 ```{r}
 theft_train = read_csv("../data/clean/theft_train.csv")
+theft_test = read_csv("../data/clean/theft_test.csv")
+theft_train_model = theft_train %>% select(-fips, -state, -county)
+```
+
+
+```{r}
+theft_test_pred = theft_test%>%select(-fips, -state, -county)
 ```
 
 # Ridge
 
 ```{r}
 set.seed(471) # set seed for reproducibility
-ridge_fit = cv.glmnet(theftrate ~ .-fips,  # formula notation, as usual
+ridge_fit = cv.glmnet(theftrate ~ .,  # formula notation, as usual
                       alpha = 0,                 # alpha = 0 for ridge
                       nfolds = 10,               # number of folds
-                      data = theft_train)   # data to run ridge on
+                      data = theft_train_model)   # data to run ridge on
 ```
 
 ```{r}
@@ -33,6 +41,14 @@ plot(ridge_fit)
 ```
 
 ```{r}
-plot_glmnet(ridge_fit, theft_train, features_to_plot = 8)
+plot_glmnet(ridge_fit, theft_train_model, features_to_plot = 8)
+```
+```{r}
+ridge_predictions = predict(ridge_fit, 
+                            newdata = theft_test_pred,
+                            s = "lambda.1se") %>% as.numeric()
+
+RMSE_ridge = sqrt(mean((ridge_predictions - theft_test_pred$theftrate)^2))
+
 ```
 
