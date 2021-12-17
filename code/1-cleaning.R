@@ -12,8 +12,6 @@ library(tm)
 library(stringr)
 
 
-
-
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 var <- load_variables(2019, "acs1", cache = TRUE)
 
@@ -67,18 +65,14 @@ census_step = census_data %>%
 census_wider = census_step %>% 
   mutate(permale = permale/totalpop, 
          bachplus = bachplus/totalpop, unemployed_rate = unemployed/(employed+unemployed), employed_rate = employed/(employed+unemployed),
-         foodstamp = foodstamp/households, no_health_ins = 
+         foodstamp = foodstamp/totalpop, no_health_ins = 
            (ilefnhi+ilufnhi+nilfnhi)/totalpop, single_mom = 
-           single_mom/households, lessthan_hs = lessthan_hs/totalpop, 
-         inschool = inschool/totalpop, ingradprofesh = ingradprofesh/totalpop, inundergrad = 
-           inundergrad/totalpop, Marriedcouplefamily = Marriedcouplefamily/households, withkids = withkids/households, singledad = 
-           singledad/households, divorced = divorced/totalpop, widowed = widowed/totalpop, nevermarried = 
-           nevermarried/totalpop, foreignborn = foreignborn/totalpop, fromdifstate = fromdifstate/totalpop, fromabroad = fromabroad/totalpop) %>% mutate(
+           single_mom/households, lessthan_hs = lessthan_hs/totalpop, inschool = inschool/totalpop, ingradprofesh = ingradprofesh/totalpop, inundergrad = inundergrad/totalpop, Marriedcouplefamily = Marriedcouplefamily/households, withkids = withkids/households, singledad = singledad/households, divorced = divorced/totalpop, widowed = widowed/totalpop, nevermarried = nevermarried/totalpop, foreignborn = foreignborn/totalpop, fromdifstate = fromdifstate/totalpop, fromabroad = fromabroad/totalpop) %>% mutate(
              dis5to17 = (dis5to17male + dis5to17female)/totalpop,
              dis18to34 = (dis18to34male + dis18to34female)/totalpop,             
              dis35to64 = (dis35to64male + dis35to64female)/totalpop,
-           ) %>% select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -dis5to17male, -dis5to17female, -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
-
+           ) %>% 
+  select(-ilefnhi,-ilufnhi,-nilfnhi, -unemployed, -employed, -dis5to17male, -dis5to17female, -dis18to34male, -dis18to34female, -dis35to64male, -dis35to64female)
 ACS_vars = drop_na(census_wider)
 
 
@@ -243,7 +237,7 @@ merge7 = merge6 %>% inner_join(unemp_bens, by = "state")
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-census_data_zip <- get_acs(geography = "zcta", variables = c(totalpop = "B01003_001", households = "B11001_002"), 
+census_data_zip <- get_acs(geography = "zcta", variables = c(totalpop = "B01003_001"), 
                            year = 2018)
 
 
@@ -258,12 +252,9 @@ census_step_zip = census_data_zip %>%
 file = "../data/raw/irstiny.csv"
 irs_raw = read_csv(file)
 
-irs_raw = irs_raw%>%select(zipcode, N07240)%>% mutate(zip = as.numeric(zipcode),saverscredit = N07240)%>%select(-zipcode,-N07240) %>% group_by(zip) %>% summarise(saverscredit = sum(saverscredit))%>%ungroup()
-
-irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saversperhouse=saverscredit/households)%>% select(-households)
-
-irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saversperhouses=saverscredit/households) %>% select(-households)
-
+irs_raw = irs_raw%>%select(zipcode, N07240)%>% mutate(zip = as.numeric(zipcode),saverscredit = N07240)%>%
+  select(-zipcode,-N07240) %>% group_by(zip) %>% summarise(saverscredit = sum(saverscredit))%>%ungroup()
+irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip")
 
 
 
@@ -271,23 +262,25 @@ irs_clean = irs_raw%>% inner_join(census_step_zip, by="zip") %>% mutate(saverspe
 file = "../data/raw/ZIP-COUNTY-FIPS_2017-06.csv"
 key_zip_county = read_csv(file)
 
-key_zip_county = key_zip_county %>% rename(zip=ZIP, county=COUNTYNAME, fips=STCOUNTYFP)%>% mutate(zip=as.numeric(zip)) %>% select(zip, county,fips)
+key_zip_county = key_zip_county %>% rename(zip=ZIP, county=COUNTYNAME, fips=STCOUNTYFP)%>% mutate(zip=as.numeric(zip)) %>% 
+  select(zip, county,fips)
 
 irs_joined = key_zip_county%>%inner_join(irs_clean, by="zip")
 
-irs_final = irs_joined%>%group_by(fips)%>% summarise(saversperhouses = mean(saversperhouses)) %>% ungroup() %>% mutate(fips=as.numeric(fips))
-
-irs_final[sapply(irs_final, is.infinite)] <- 0
+irs_final = irs_joined%>%group_by(fips)%>% summarise(saverscredit = mean(saverscredit)) %>% ungroup() %>% mutate(fips=as.numeric(fips))
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-merge8=merge7 %>%inner_join(irs_final,by="fips") %>% drop_na()
+merge8=merge7 %>%inner_join(irs_final,by="fips") %>% drop_na() %>% 
+  mutate(saversperhouses = as.numeric(saverscredit/households), .keep = "unused")
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 file = "../data/raw/People.csv"
 atlas_people_raw = read_csv(file)
-atlas_people_raw = atlas_people_raw %>% select(FIPS, ForeignBornEuropePct,ForeignBornMexPct,ForeignBornCaribPct, ForeignBornCentralSouthAmPct, ForeignBornAsiaPct, ForeignBornAfricaPct, AvgHHSize, PopChangeRate1819, NonEnglishHHNum) %>% rename(fips = FIPS) %>% mutate(fips = as.numeric(fips))
+atlas_people_raw = atlas_people_raw %>% 
+  select(FIPS, ForeignBornEuropePct,ForeignBornMexPct,ForeignBornCaribPct, ForeignBornCentralSouthAmPct, ForeignBornAsiaPct, 
+         ForeignBornAfricaPct, AvgHHSize, PopChangeRate1819, NonEnglishHHNum) %>% rename(fips = FIPS) %>% mutate(fips = as.numeric(fips))
 
 
 
@@ -299,7 +292,9 @@ merge9=merge8 %>%inner_join(atlas_people_raw,by="fips") %>% drop_na()
 file = "../data/raw/Jobs.csv"
 atlas_jobs_raw = read_csv(file)
 
-atlas_jobs_raw = atlas_jobs_raw %>% select(FIPS, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrans, PctEmpInformation, PctEmpFIRE) %>% rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
+atlas_jobs_raw = atlas_jobs_raw %>% 
+  select(FIPS, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrade, PctEmpInformation, PctEmpFIRE) %>% 
+  rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -309,7 +304,8 @@ merge10=merge9 %>%inner_join(atlas_jobs_raw,by="fips") %>% drop_na()
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 file = "../data/raw/Income.csv"
 atlas_income_raw = read_csv(file)
-atlas_income_raw = atlas_income_raw %>% select(FIPS, Deep_Pov_Children, PerCapitaInc, Deep_Pov_All)  %>% rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
+atlas_income_raw = atlas_income_raw %>% select(FIPS, Deep_Pov_Children, PerCapitaInc, Deep_Pov_All)  %>% 
+  rename(fips = FIPS)  %>% mutate(fips = as.numeric(fips))
 
 
 
@@ -318,6 +314,5 @@ merge11=merge10 %>%inner_join(atlas_income_raw,by="fips") %>% drop_na()
 
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
-write.csv(merge11, file = "../data/clean/merge11fix.csv", row.names = FALSE)
-
+write.csv(merge11, file = '../data/clean/merge11.csv', row.names = FALSE)
 
