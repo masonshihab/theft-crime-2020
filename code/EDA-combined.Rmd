@@ -171,7 +171,7 @@ We observed positive correlations between Percent adults reporting poor or fair 
 
 ```{r}
 corrplot(M_ses, type = 'lower', order = 'hclust', tl.col = 'black',
-         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.5)
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.6)
 ```
 
 We observed that there are positive correlations between the Social Vulnerability Index (SVI) and all poverty-related features. We also found that a group of features, including Employment rate, Percent with college or higher education, Median household income, and Per capita income in the past 12 months, that are negatively correlated with SVI and poverty-related features.
@@ -181,10 +181,10 @@ We observed that there are positive correlations between the Social Vulnerabilit
 
 ```{r}
 corrplot(M_demo, type = 'lower', order = 'hclust', tl.col = 'black',
-         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.5)
 ```
 
-
+From Figure X, we observed that Percent of household with own children is negatively correlated with 
 
 ## Histogram for the Top7 important features (overlaps of Ridge & Lasso)
 
