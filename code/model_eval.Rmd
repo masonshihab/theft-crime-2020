@@ -164,7 +164,7 @@ final_elnet_fit = cv.glmnet(theftrate ~ .-fips -state -county,  # formula notati
 
 # Tree based methods
 
-
+## random forest
 
 ```{r, cache=TRUE}
 set.seed(471) # set seed for reproducibility

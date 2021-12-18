@@ -20,6 +20,10 @@ library(kableExtra)
 library(corrplot)
 ```
 
+```{r}
+theft_alldata=read_csv("../data/clean/dataclean.csv")
+```
+
 
 ```{r}
 theft_train=read_csv("../data/clean/theft_train.csv")
@@ -45,6 +49,12 @@ theft_train %>% ggplot(aes(x = theftrate)) +
   scale_y_log10()+
   scale_color_manual(name = "statistics", values = c(median = "blue", mean = "red"))
 ```
+```{r}
+mean(theft_train$theftrate)
+median(theft_train$theftrate)
+```
+
+
 ## Boxplot of Response
 
 ```{r}
@@ -55,6 +65,9 @@ ggplot(aes(y=theftrate)) +
        title = "Boxplot of Theft Rate")+
   theme_bw()
 ```
+
+To understand the distribution of the response variable, we first ploted a histogram of theft rate. As seen from Figure X, the data appears to be right-skewed, with some counties exceeding a theft rate of 4%. The mean county-level theft rate in 2020 is 0.563%; the median is 0.417%. The boxplot in Figure X provides a clearer presentation of the outlier counties with exceedingly high theft rates. 
+
 ## Highest Theft Rate - Top10 Counties
 
 ```{r}
@@ -67,6 +80,8 @@ theft_train %>% select(state,county,theftrate) %>% arrange(desc(theftrate)) %>% 
   kable_styling(position = "center") %>%
   kable_styling(latex_options = "HOLD_position")
 ```
+We proceeded to determine which counties had extremely high theft rate in 2020 by looking at the sorted data. The sorted data in Table X shows that the top 6 counties with highest rates of theft incidence are Hamilton county in IN, New York county in NY, Jefferson county in CO, Denver county in CO, Tunica county in MS, and San Francisco county in CA. 
+
 
 ## Heat map of theft rate
 
@@ -90,7 +105,7 @@ map_data("county") %>%
   theme_void()
 ```
 
-
+We also created a heat map for our response variable. As shown in Figure X, most of the counties included in this dataset have theft rates well below 2.5%. Very few states have theft rates about 7.5%. The grey areas indicate counties not included in our dataset.
 
 
 
@@ -127,24 +142,42 @@ M_demo = cor(cluster_demo)
 
 ```
 
+## social safety net
 ```{r}
 corrplot(M_safetynet, type = 'lower', order = 'hclust', tl.col = 'black',
          cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 1)
 ```
+We observed a positively correlation between State and local government spending on people and State unemployment insurance. Also, Percent of households qualifying for food stamps is positively correlated with No Health Insurance. 
+Not surprisingly, No Health Insurance is negatively correlated with State and local government spending on people.
+
+
+## criminal justice response
 
 ```{r}
 corrplot(M_criminaljustice, type = 'lower', order = 'hclust', tl.col = 'black',
          cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
 ```
+We found no significant correlations among features belonging to the category of Criminal justice response.
+
+##health-related factors
+
 ```{r}
 corrplot(M_health, type = 'lower', order = 'hclust', tl.col = 'black',
          cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
 ```
+We observed positive correlations between Percent adults reporting poor or fair health and Percent of people with disability in each of the three age groups. Moreover, the percentages of people with disability for the three age groups are also positively correlated with each other.
+
+## SES
 
 ```{r}
 corrplot(M_ses, type = 'lower', order = 'hclust', tl.col = 'black',
-         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.5)
 ```
+
+We observed that there are positive correlations between the Social Vulnerability Index (SVI) and all poverty-related features. We also found that a group of features, including Employment rate, Percent with college or higher education, Median household income, and Per capita income in the past 12 months, that are negatively correlated with SVI and poverty-related features.
+
+
+## basic demographics
 
 ```{r}
 corrplot(M_demo, type = 'lower', order = 'hclust', tl.col = 'black',
@@ -275,7 +308,7 @@ p6 = theft_train %>% select(-fips, -state, -county)%>%
   scale_x_log10() +
   scale_y_log10() +
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
-  labs(x = "saversperhouses", 
+  labs(x = "Percent of people qualifying for Savers Credit", 
        y = "Theft Rate",
        title = "Percent of people qualifying for\n Saver's Credit vs Theft Rate") +
   theme_bw() + 
@@ -341,7 +374,7 @@ p9= theft_train %>% select(-fips, -state, -county)%>%
   geom_smooth(method = "lm", formula = "y~x", se = FALSE) +
   labs(x = "Percent employed in construction", 
        y = "Theft Rate",
-       title = "Percent of People Employed in Construction") +
+       title = "Percent of People Employed in Construction vs. Theft Rate") +
   theme_bw() + 
   theme(plot.title = element_text(hjust = 0.5))
 
