@@ -143,7 +143,7 @@ plot_glmnet(elnet_fit_best, theft_train, features_to_plot = 10)
 
 
 ```{r lasso-nonzero-std-coefficients-table}
-extract_std_coefs(elnet_fit_best, theft_train) %>% 
+extract_std_coefs(lasso_fit, theft_train) %>% 
   filter(coefficient != 0) %>% arrange(desc(abs(coefficient)))
 ```
 
@@ -186,15 +186,15 @@ tibble(m = mvalues, oob_err = oob_errors) %>%
 
 ```{r cache=TRUE}
 set.seed(471) # set seed for reproducibility
-rf_13 = randomForest(theftrate ~ .-fips -state -county, mtry = 13, data = theft_train)
+rf_12 = randomForest(theftrate ~ .-fips -state -county, mtry = 12, data = theft_train)
 ```
 
 ```{r}
-rf_13$importance 
+rf_12$importance 
 ```
 
 ```{r}
-varImpPlot(rf_13,n.var = 10)
+varImpPlot(rf_12,n.var = 10)
 ```
 
 
@@ -372,7 +372,7 @@ constant_RMSE = sqrt(mean((training_mean_response-theft_test$theftrate)^2))
 
 
 #RF
-rf_predictions = predict(rf_13, newdata = theft_test) 
+rf_predictions = predict(rf_12, newdata = theft_test) 
 
 rf_RMSE = sqrt(mean((rf_predictions-theft_test$theftrate)^2))
 
