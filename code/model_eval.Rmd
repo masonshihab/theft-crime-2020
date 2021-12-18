@@ -184,6 +184,34 @@ tibble(m = mvalues, oob_err = oob_errors) %>%
   theme_bw()
 ```
 
+A quick-and-dirty way to tune a random forest is to try out a few different values of `mtry`:
+```{r}
+rf_5 = randomForest(theftrate ~. -fips -state - county, mtry = 5, data = theft_train)
+rf_6 = randomForest(theftrate ~. -fips -state - county, mtry = 6, data = theft_train)
+rf_12 = randomForest(theftrate ~. -fips -state - county, mtry = 12, data = theft_train)
+rf_14 = randomForest(theftrate ~. -fips -state - county, mtry = 14, data = theft_train)
+```
+
+We can extract the OOB errors from each of these objects by using the `mse` field:
+```{r}
+oob_errors2 = bind_rows(
+  tibble(ntree = 1:500, oob_err = rf_5$mse, m = 5),
+  tibble(ntree = 1:500, oob_err = rf_6$mse, m = 6),
+  tibble(ntree = 1:500, oob_err = rf_12$mse, m = 12),
+  tibble(ntree = 1:500, oob_err = rf_14$mse, m = 14),
+)
+oob_errors2  
+```
+We can then plot these as follows:
+```{r}
+oob_errors2 %>%
+  ggplot(aes(x = ntree, y = oob_err, colour = factor(m))) +
+  geom_line() + theme_bw()
+```
+
+
+
+
 ```{r cache=TRUE}
 set.seed(471) # set seed for reproducibility
 rf_12 = randomForest(theftrate ~ .-fips -state -county, mtry = 12, data = theft_train)
@@ -247,9 +275,6 @@ gbm_3 = gbm(theftrate ~ . -fips -state -county,
 
 
 
-ii. (2 points) Plot the CV errors against the number of trees for each interaction depth. These three curves should be on the same plot with different colors. Also plot horizontal dashed lines at the minima of these three curves. What are the optimal interaction depth and number of trees?
-
-**Solution:**
 
 ```{r}
 ntrees = 1000
