@@ -22,6 +22,7 @@ library(gbm)
 library(glmnetUtils) # boosting
 library(randomForest)
 library(kableExtra)
+library(cowplot)
 ```
 
 ```{r}
@@ -59,7 +60,7 @@ plot_glmnet(ridge_fit, theft_train, features_to_plot = 8)
 
 ```{r}
 extract_std_coefs(ridge_fit, theft_train) %>% 
-  filter(coefficient != 0) %>% arrange(desc(coefficient)) %>% head(8) %>% 
+  filter(coefficient != 0) %>% arrange(desc(abs(coefficient))) %>% head(10) %>% 
   kable(format = "latex", row.names = NA, 
         booktabs = TRUE, digits = 8, 
         col.names = c("Feature", "Coefficient"),
@@ -123,6 +124,7 @@ plot_glmnet(lasso_fit, theft_train)
 
 Next, let's run an elastic net regression. We can do this via the `cva.glmnet()` function:
 ```{r}
+set.seed(471)
 elnet_fit = cva.glmnet(theftrate ~ .-fips -county -state, # formula notation, as usual
                        nfolds = 10,               # number of folds
                        data = theft_train)   # data to run on
@@ -159,13 +161,6 @@ And we can make a trace plot for this optimal value of `alpha`:
 plot_glmnet(elnet_fit_best, theft_train)
 ```
 
-This is too many features to highlight, so let's choose a smaller number:
-```{r}
-plot_glmnet(elnet_fit_best, theft_train, features_to_plot = 10)
-```
-
-
-
 
 
 
@@ -179,7 +174,6 @@ extract_std_coefs(elnet_fit_best, theft_train) %>%
         model based on the one-standard-error rule.") %>%
   kable_styling(position = "center")
 ```
-
 
 
 
@@ -201,7 +195,7 @@ for(idx in 1:length(mvalues)){
 tibble(m = mvalues, oob_err = oob_errors) %>%
   ggplot(aes(x = m, y = oob_err)) + 
   geom_line() + geom_point() + 
-  scale_x_continuous(breaks = mvalues) +
+  scale_x_continuous(breaks = mvalues) + labs(y = "Out of Bag Error", x = "Features Available per Split (m)") +
   theme_bw()
 ```
 
@@ -227,7 +221,7 @@ We can then plot these as follows:
 ```{r}
 oob_errors2 %>%
   ggplot(aes(x = ntree, y = oob_err, colour = factor(m))) +
-  geom_line() + theme_bw()
+  geom_line() + labs(y = "Out of Bag Error", x = "Number of Trees Used", color = "m") + theme_bw()
 ```
 
 
@@ -330,7 +324,7 @@ cv_errors %>%
 gbm_fit_optimal = gbm_3
 optimal_num_trees = gbm.perf(gbm_3, plot.it = FALSE) 
 summary(gbm_3, n.trees = optimal_num_trees, plotit = FALSE) %>% tibble() %>%
-  head(10) %>% 
+  head(12) %>% 
   kable(format = "latex", row.names = NA, 
         booktabs = TRUE,
         digits = 3,
@@ -346,69 +340,49 @@ ii. (4 points) Produce partial dependence plots for the top three features based
 **Solution:**
 
 ```{r}
-plot(gbm_3, i.var = "housing_density", 
+housing = plot(gbm_3, i.var = "housing_density", 
      n.trees = optimal_num_trees)
 ```
 
 ```{r}
-plot(gbm_3, i.var = "poor_fair_health", 
+FIRE = plot(gbm_3, i.var = "PctEmpFIRE", 
      n.trees = optimal_num_trees)
 
 ```
 
 ```{r}
-plot(gbm_3, i.var = "pertrump", n.trees = 
-       optimal_num_trees) 
-```
-
-```{r}
-plot(gbm_3, i.var = "PctEmpFIRE", n.trees = 
+trump = plot(gbm_3, i.var = "pertrump", n.trees = 
        optimal_num_trees) 
 ```
 
 
-
 ```{r}
-plot(gbm_3, i.var = "pop_density", n.trees = 
-       optimal_num_trees) 
-```
-
-```{r}
-plot(gbm_3, i.var = "unemp_bens_possible", n.trees = 
+bens = plot(gbm_3, i.var = "unemp_bens_possible", n.trees = 
        optimal_num_trees) 
 ```
 
 
-
-
 ```{r}
-plot(gbm_3, i.var = "bachplus", n.trees = 
-       optimal_num_trees) 
-```
-
-```{r}
-plot(gbm_3, i.var = "withkids", n.trees = 
-       optimal_num_trees) 
-```
-
-police_funding_score	
-
-```{r}
-plot(gbm_3, i.var = "police_funding_score", n.trees = 
+police = plot(gbm_3, i.var = "police_funding_score", n.trees = 
        optimal_num_trees) 
 ```
 
 
 
 ```{r}
-plot(gbm_3, i.var = "dis35to64", n.trees = 
+healthins = plot(gbm_3, i.var = "no_health_ins", n.trees = 
        optimal_num_trees) 
+```
+
+```{r}
+plot_grid(nrow = 2, housing, bens, healthins, police, trump, FIRE)
 ```
 
 
 
-
 ```{r}
+
+set.seed(471)
 
 # ridge prediction error
 ridge_predictions = predict(ridge_fit, 
@@ -433,8 +407,8 @@ lasso_RMSE = sqrt(mean((lasso_predictions-theft_test$theftrate)^2))
 
 # elnet prediction error
 
-elnet_predictions = predict(elnet_fit, 
-                            alpha = elnet_fit$alpha,
+elnet_predictions = predict(elnet_fit,
+                            alpha = elnet_fit_best$alpha,
                             newdata = theft_test, 
                             s = "lambda.1se") %>%
   as.numeric()
