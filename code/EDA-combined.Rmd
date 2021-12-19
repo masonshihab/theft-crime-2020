@@ -55,18 +55,7 @@ median(theft_train$theftrate)
 ```
 
 
-## Boxplot of Response
-
-```{r}
-theft_train %>% select(-fips, -state, -county) %>%
-ggplot(aes(y=theftrate)) +
-  geom_boxplot()+
-  labs(y = "Theft Rate",
-       title = "Boxplot of Theft Rate")+
-  theme_bw()
-```
-
-To understand the distribution of the response variable, we first ploted a histogram of theft rate. As seen from Figure X, the data appears to be right-skewed, with some counties exceeding a theft rate of 4%. The mean county-level theft rate in 2020 is 0.563%; the median is 0.417%. The boxplot in Figure X provides a clearer presentation of the outlier counties with exceedingly high theft rates. 
+To understand the distribution of the response variable, we first ploted a histogram of theft rate. As seen from Figure X, the data appears to be right-skewed, with some counties exceeding a theft rate of 4%. The mean county-level theft rate in 2020 is 0.563%; the median is 0.417%. There are a few outlier counties with very high theft rates. 
 
 ## Highest Theft Rate - Top10 Counties
 
@@ -74,7 +63,7 @@ To understand the distribution of the response variable, we first ploted a histo
 theft_train %>% select(state,county,theftrate) %>% arrange(desc(theftrate)) %>% head(10) %>%
   kable(format = "latex", row.names = NA, 
         booktabs = TRUE,
-        digits = 3,
+        digits = 5,
         col.names = c("State", "County","Theft Rate"),
         caption = "This a table showing the top 10 counties with the highest theft rate.") %>%
   kable_styling(position = "center") %>%
@@ -148,7 +137,7 @@ corrplot(M_safetynet, type = 'lower', order = 'hclust', tl.col = 'black',
          cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 1)
 ```
 We observed a positively correlation between State and local government spending on people and State unemployment insurance. Also, Percent of households qualifying for food stamps is positively correlated with No Health Insurance. 
-Not surprisingly, No Health Insurance is negatively correlated with State and local government spending on people.
+Not surprisingly, No Health Insurance is negatively correlated with State and local government spending on people. 
 
 
 ## criminal justice response
@@ -184,7 +173,8 @@ corrplot(M_demo, type = 'lower', order = 'hclust', tl.col = 'black',
          cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.5)
 ```
 
-From Figure X, we observed that Percent of household with own children is negatively correlated with 
+From Figure X, we observed that Percent of household with own children is negatively correlated with both Age (median) and Percent Divorced. Housing density has a significant positive correlation with the Population density.
+
 
 ## Histogram for the Top7 important features (overlaps of Ridge & Lasso)
 
