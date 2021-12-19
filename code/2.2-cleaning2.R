@@ -9,7 +9,7 @@ library(readxl)
 library(usdata)
 library(tm)
 library(stringr)
-
+set.seed(471)
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 hope = read.csv("https://raw.githubusercontent.com/grammakov/USA-cities-and-states/master/us_cities_states_counties.csv", sep = "|") %>% rename(State = State.full) 

@@ -1,0 +1,32 @@
+---
+title: "eda-resp"
+author: "Elinor chu"
+date: "12/15/2021"
+output: html_document
+---
+
+```{r}
+library(corrplot)
+library(tidyverse)
+```
+
+```{r}
+theft_train=read_csv("../data/clean/theft_train.csv")
+
+theft_train = theft_train%>% select(-fips, -state, -county,-theftrate)
+
+```
+
+
+
+```{r}
+M = cor(theft_train)
+```
+
+
+```{r}
+corrplot(M, type = 'lower', order = 'hclust', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.4)
+```
+
+

@@ -10,7 +10,7 @@ library(readxl)
 library(usdata)
 library(tm)
 library(stringr)
-
+set.seed(471)
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------------
 var <- load_variables(2019, "acs1", cache = TRUE)

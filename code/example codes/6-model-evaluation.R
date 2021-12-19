@@ -1,6 +1,18 @@
 # load libraries
-library(glmnetUtils)
+library(dplyr)
+library(lubridate)
 library(tidyverse)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(usdata)
+library(tm)
+library(stringr)
+library(gbm)
+library(glmnetUtils) # boosting
+library(randomForest)
+library(kableExtra)
+library(cowplot)
 
 # load test data
 covid_test = read_tsv("data/clean/covid_test.tsv")

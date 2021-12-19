@@ -1,0 +1,69 @@
+---
+title: 'Understanding Theft in America on the County Level'
+author: 'Mason Shihab and Elinor Chu'
+date: '12/19/21'
+output:
+  bookdown::pdf_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: '2'
+urlcolor: blue
+---
+
+```{r setup, include=FALSE, message = FALSE}
+options(scipen = 0, digits = 5)  # controls number of significant digits printed
+library(tidyverse)
+library(kableExtra)
+```
+
+\bigskip
+
+# Top 10 Counties
+
+```{r}
+read_tsv("../results/top-10-counties-data.tsv") %>%
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE,
+        digits = 5,
+        col.names = c("State", "County","Theft Rate"),
+        caption = "This a table showing the top 10 counties with the highest theft rate.") %>%
+  kable_styling(position = "center") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+# Ridge Coefficients
+
+```{r, message = FALSE, echo = FALSE}
+read_tsv("../results/ridge-features-table.tsv") %>% 
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE, digits = 10, 
+        col.names = c("Feature", "Coefficient"),
+        caption = "Standardized coefficients for features in the Ridge 
+        model based on the one-standard-error rule.") %>%
+  kable_styling(position = "center")
+```
+
+# Boosting Importance
+
+```{r}
+read_tsv("../results/gbm_opt_rel_imp.tsv") %>% 
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE,
+        digits = 5,
+        col.names = c("Variable", "Relative influence"),
+        caption = "These are the first ten rows of the relative influence 
+        table for the optimal boosting model above.") %>%
+  kable_styling(position = "center") %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+# Model Evaluation
+
+```{r model-evaluation, message = FALSE, echo = FALSE}
+read_tsv("../results/model-evaluation.tsv") %>%
+  kable(format = "latex", row.names = NA,
+        booktabs = TRUE, digits = 8,
+        caption = "Root-mean-squared prediction errors.") %>%
+  kable_styling(position = "center")
+```

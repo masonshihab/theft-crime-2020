@@ -1,0 +1,64 @@
+---
+title: "corr-clusters"
+author: "Elinor chu"
+date: "12/16/2021"
+output: html_document
+---
+
+```{r}
+library(corrplot)
+library(tidyverse)
+```
+
+```{r}
+theft_train=read_csv("../data/clean/theft_train.csv")
+```
+
+```{r}
+cluster_safetynet = theft_train%>% select(-fips, -state, -county) %>% select(unemp_bens_possible, spend_per_capita, saversperhouses, no_health_ins, foodstamp)
+
+cluster_criminaljustice = theft_train%>% select(-fips, -state, -county) %>% select(incar_rate, police_violence_score, police_accountability_score, approach_to_policing_score, police_funding_score)
+
+cluster_health = theft_train%>% select(-fips, -state, -county) %>% select(mean_hha_score, poor_fair_health, dis5to17, dis18to34, dis35to64)
+
+cluster_ses = theft_train%>% select(-fips, -state, -county) %>% select(lessthan_hs, bachplus, unemployed_rate, employed_rate, med_2bed, gini, svi_overall, pct_all_in_pov, pct_child_in_pov, med_income, sev_hou_cost_burden, sev_hou_prob, PctEmpChange1920, PctEmpConstruction, PctEmpMining, PctEmpTrade, PctEmpTrans, PctEmpInformation, PctEmpFIRE, PerCapitaInc, Deep_Pov_All, Deep_Pov_Children, inschool, ingradprofesh, inundergrad)
+
+cluster_demo= theft_train%>% select(-fips, -state, -county) %>% select(med_age,permale,divorced,widowed,nevermarried,pertrump,pop_density,housing_density,res_seg_nonwhite_white,Marriedcouplefamily,ForeignBornEuropePct,ForeignBornMexPct,ForeignBornCaribPct,ForeignBornCentralSouthAmPct,ForeignBornAsiaPct,ForeignBornAfricaPct,NonEnglishHHNum,AvgHHSize,PopChangeRate1819,withkids,single_mom,singledad,foreignborn,fromdifstate,fromabroad)
+
+```
+
+
+
+```{r}
+M_safetynet = cor(cluster_safetynet)
+M_criminaljustice = cor(cluster_criminaljustice)
+M_health = cor(cluster_health)
+M_ses = cor(cluster_ses)
+M_demo = cor(cluster_demo)
+
+```
+
+```{r}
+corrplot(M_safetynet, type = 'lower', order = 'hclust', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 1)
+```
+
+```{r}
+corrplot(M_criminaljustice, type = 'lower', order = 'hclust', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
+```
+```{r}
+corrplot(M_health, type = 'lower', order = 'hclust', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
+```
+
+```{r}
+corrplot(M_ses, type = 'lower', order = 'hclust', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
+```
+
+```{r}
+corrplot(M_demo, type = 'lower', order = 'hclust', tl.col = 'black',
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.8)
+```
+

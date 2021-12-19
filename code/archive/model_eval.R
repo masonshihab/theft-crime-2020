@@ -1,0 +1,356 @@
+## ----setup, include=FALSE-----------------------------------------------------------------------------------------------------------------
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(usdata)
+library(tm)
+library(stringr)
+library(gbm)
+library(glmnetUtils) # boosting
+library(randomForest)
+library(kableExtra)
+library(cowplot)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+# install.packages("scales")              # dependency of plot_glmnet
+source("functions/plot_glmnet.R")
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+theft_train = read_csv("../data/clean/theft_train.csv") 
+theft_test = read_csv("../data/clean/theft_test.csv") 
+
+
+## ----cache=TRUE---------------------------------------------------------------------------------------------------------------------------
+set.seed(471) # set seed for reproducibility
+ridge_fit = cv.glmnet(theftrate ~ .-fips -state -county,  # formula notation, as usual
+                      alpha = 0,                 # alpha = 0 for ridge
+                      nfolds = 10,               # number of folds
+                      data = theft_train)   # data to run ridge on
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+plot(ridge_fit)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(ridge_fit, theft_train, features_to_plot = 8)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+extract_std_coefs(ridge_fit, theft_train) %>% 
+  filter(coefficient != 0) %>% arrange(desc(abs(coefficient))) %>% head(10) %>% 
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE, digits = 8, 
+        col.names = c("Feature", "Coefficient"),
+        caption = "Standardized coefficients for features in the Ridge 
+        model based on the one-standard-error rule.") %>%
+  kable_styling(position = "center")
+
+
+## ---- cache=TRUE--------------------------------------------------------------------------------------------------------------------------
+set.seed(471) # set seed before cross-validation for reproducibility
+
+lasso_fit = cv.glmnet(theftrate ~. -state -county -fips , alpha = 1, nfolds = 10, data = theft_train) 
+
+
+## ----lasso-cv-plot, echo = FALSE, fig.width = 6, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "This is the CV plot for the 10-fold cross-validated lasso regression model on the training data.", fig.pos = "H"----
+plot(lasso_fit)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+lambda_lasso = lasso_fit$lambda.1se
+sprintf("The value of lambda based on the one-standard-error rule: %f",
+        lambda_lasso)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+num_features = lasso_fit$nzero[lasso_fit$lambda == lasso_fit$lambda.1se]
+sprintf("The number of features (excluding intercept) selected (1se): %i", 
+        num_features)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+extract_std_coefs(lasso_fit, theft_train) %>% 
+  filter(coefficient != 0) %>% arrange(desc(coefficient)) %>% 
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE, digits = 8, 
+        col.names = c("Feature", "Coefficient"),
+        caption = "Standardized coefficients for features in the Elastic Net 
+        model based on the one-standard-error rule.") %>%
+  kable_styling(position = "center")
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(lasso_fit, theft_train)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+set.seed(471)
+elnet_fit = cva.glmnet(theftrate ~ .-fips -county -state, # formula notation, as usual
+                       nfolds = 10,               # number of folds
+                       data = theft_train)   # data to run on
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit$alpha
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+plot_cva_glmnet(elnet_fit)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit_best = extract_best_elnet(elnet_fit)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+elnet_fit_best$alpha
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+plot(elnet_fit_best)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+plot_glmnet(elnet_fit_best, theft_train)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+extract_std_coefs(elnet_fit_best, theft_train) %>% 
+  filter(coefficient != 0) %>% arrange(desc(coefficient)) %>% 
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE, digits = 8, 
+        col.names = c("Feature", "Coefficient"),
+        caption = "Standardized coefficients for features in the Lasso 
+        model based on the one-standard-error rule.") %>%
+  kable_styling(position = "center")
+
+
+## ---- cache=TRUE--------------------------------------------------------------------------------------------------------------------------
+set.seed(471) # set seed for reproducibility
+
+mvalues = seq(4,16, by = 1)
+oob_errors = numeric(length(mvalues))
+ntree = 500
+for(idx in 1:length(mvalues)){
+  m = mvalues[idx]
+  rf_fit = randomForest(theftrate ~. -fips -state - county, mtry = m, data = theft_train)
+  oob_errors[idx] = rf_fit$mse[ntree]
+}
+tibble(m = mvalues, oob_err = oob_errors) %>%
+  ggplot(aes(x = m, y = oob_err)) + 
+  geom_line() + geom_point() + 
+  scale_x_continuous(breaks = mvalues) + labs(y = "Out of Bag Error", x = "Features Available per Split (m)") +
+  theme_bw()
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+set.seed(471)
+rf_12 = randomForest(theftrate ~. -fips -state - county, mtry = 12, data = theft_train)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+oob12 = tibble(ntree = 1:500, oob_err = rf_12$mse)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+oob12 %>%
+  ggplot(aes(x = ntree, y = oob_err)) +
+  geom_line() + labs(y = "Out of Bag Error", x = "Number of Trees Used") + theme_bw()
+
+
+## ----cache=TRUE---------------------------------------------------------------------------------------------------------------------------
+set.seed(471) # set seed for reproducibility
+rf_opt = randomForest(theftrate ~ .-fips -state -county, mtry = 12, ntree = 500, data = theft_train, importance = TRUE)
+
+
+## ----varimp, echo = TRUE, fig.width = 11, fig.height = 6, out.width = "100%", fig.align='center', fig.cap = "Variable Importance Plot for the optimal random forest model.", fig.pos = "H"----
+varImpPlot(rf_opt, n.var = 10)
+
+
+## ----cache=TRUE---------------------------------------------------------------------------------------------------------------------------
+set.seed(471) # for reproducibility (DO NOT CHANGE)
+# TODO: Fit random forest with interaction depth 1
+
+gbm_1 = gbm(theftrate ~ . -fips -state -county,
+              distribution = "gaussian",
+              n.trees = 1000,
+              interaction.depth = 1,
+              shrinkage = 0.1,
+              cv.folds = 5,
+              data = theft_train)
+
+set.seed(471) # for reproducibility (DO NOT CHANGE)
+# TODO: Fit random forest with interaction depth 2
+
+gbm_2 = gbm(theftrate ~ . -fips -state -county,
+              distribution = "gaussian",
+              n.trees = 1000,
+              interaction.depth = 2,
+              shrinkage = 0.1,
+              cv.folds = 5,
+              data = theft_train)
+
+set.seed(471) # for reproducibility (DO NOT CHANGE)
+# TODO: Fit random forest with interaction depth 3
+
+
+gbm_3 = gbm(theftrate ~ . -fips -state -county,
+              distribution = "gaussian",
+              n.trees = 1000,
+              interaction.depth = 3,
+              shrinkage = 0.1,
+              cv.folds = 5,
+              data = theft_train)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+ntrees = 1000
+cv_errors = bind_rows(
+  tibble(ntree = 1:ntrees, cv_err = gbm_1$cv.error, Depth = 1),
+  tibble(ntree = 1:ntrees, cv_err = gbm_2$cv.error, Depth = 2),
+  tibble(ntree = 1:ntrees, cv_err = gbm_3$cv.error, Depth = 3)
+) %>% mutate(Depth = factor(Depth))
+
+# plot CV errors
+
+mins = cv_errors %>% group_by(Depth) %>% summarise(min_err = min(cv_err))
+
+gbm.perf(gbm_3, plot.it = FALSE)
+
+
+## ----deptherr, echo = TRUE, fig.width = 5, fig.height = 3, out.width = "100%", fig.align='center', fig.cap = "CV Error by Trees and Interaction Depth (with min error for each depth dashed)", fig.pos = "H"----
+cv_errors %>%
+  ggplot(aes(x = ntree, y = cv_err, colour = Depth)) +
+  geom_line() + theme_bw() + 
+  geom_hline(aes(yintercept = min_err, color = Depth), 
+             data = mins, linetype = "dashed") + 
+  labs(y = "CV Error", x = "Trees") + scale_y_log10()
+
+
+## ----relinf-------------------------------------------------------------------------------------------------------------------------------
+gbm_fit_optimal = gbm_3
+optimal_num_trees = gbm.perf(gbm_3, plot.it = FALSE) 
+summary(gbm_fit_optimal, n.trees = optimal_num_trees, plotit = FALSE) %>% tibble() %>%
+  head(12) %>% 
+  kable(format = "latex", row.names = NA, 
+        booktabs = TRUE,
+        digits = 3,
+        col.names = c("Variable", "Relative influence"),
+        caption = "These are the first ten rows of the relative influence 
+        table for the optimal boosting model above.") %>%
+  kable_styling(position = "center") %>%
+  kable_styling(latex_options = "HOLD_position")
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+housing = plot(gbm_3, i.var = "housing_density", 
+     n.trees = optimal_num_trees)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+FIRE = plot(gbm_3, i.var = "PctEmpFIRE", 
+     n.trees = optimal_num_trees)
+
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+trump = plot(gbm_3, i.var = "pertrump", n.trees = 
+       optimal_num_trees) 
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+bens = plot(gbm_3, i.var = "unemp_bens_possible", n.trees = 
+       optimal_num_trees) 
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+police = plot(gbm_3, i.var = "police_funding_score", n.trees = 
+       optimal_num_trees) 
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+healthins = plot(gbm_3, i.var = "no_health_ins", n.trees = 
+       optimal_num_trees) 
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+plot_grid(nrow = 2, housing, bens, healthins, police, trump, FIRE)
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+
+set.seed(471)
+
+# ridge prediction error
+ridge_predictions = predict(ridge_fit, 
+                            newdata = theft_test, 
+                            s = "lambda.1se") %>% as.numeric()
+
+ridge_RMSE = sqrt(mean((ridge_predictions-theft_test$theftrate)^2))
+
+
+
+# lasso prediction error
+
+lasso_predictions = predict(lasso_fit, 
+                            newdata = theft_test, 
+                            s = "lambda.1se") %>%
+  as.numeric()
+
+lasso_RMSE = sqrt(mean((lasso_predictions-theft_test$theftrate)^2))
+
+
+
+
+# elnet prediction error
+
+elnet_predictions = predict(elnet_fit,
+                            alpha = elnet_fit_best$alpha,
+                            newdata = theft_test, 
+                            s = "lambda.1se") %>%
+  as.numeric()
+
+
+
+elnet_RMSE = sqrt(mean((elnet_predictions-theft_test$theftrate)^2))
+
+
+
+# intercept-only prediction error
+training_mean_response = mean(theft_test$theftrate)
+constant_RMSE = sqrt(mean((training_mean_response-theft_test$theftrate)^2))
+
+
+
+#RF
+rf_predictions = predict(rf_opt, newdata = theft_test) 
+
+rf_RMSE = sqrt(mean((rf_predictions-theft_test$theftrate)^2))
+
+#Boosting
+gbm_predictions = predict(gbm_fit_optimal, n.trees = optimal_num_trees,
+                          newdata = theft_test)
+
+gbm_RMSE = sqrt(mean((gbm_predictions-theft_test$theftrate)^2))
+
+
+
+
+# print nice table
+
+
+tibble(Ridge = ridge_RMSE, Lasso = lasso_RMSE, `Intercept-only` = constant_RMSE, 
+       Elastic_Net = elnet_RMSE, Random_Forest = rf_RMSE, Boosting = gbm_RMSE) %>% pivot_longer(everything(), names_to = "Model", values_to = "Test_RMSE") %>% arrange(Test_RMSE) %>% 
+   kable(format = "latex", row.names = NA,
+       booktabs = TRUE, digits = 8,
+       caption = "Root-mean-squared prediction errors by model type,
+       and intercept-only models.") %>%
+ kable_styling(position = "center")
+

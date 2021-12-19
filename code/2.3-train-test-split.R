@@ -1,4 +1,6 @@
-theftdata = read.csv("../data/clean/dataclean.csv") %>% as.data.frame()
+library(tidyverse)
+
+theftdata = read.csv("../data/clean/dataclean.csv")
 
 set.seed(471)
 
