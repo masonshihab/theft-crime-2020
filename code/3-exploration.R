@@ -15,15 +15,14 @@ library(cowplot)
 
 
 set.seed(471)
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 theft_alldata=read_csv("../data/clean/dataclean.csv")
 
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
 theft_train=read_csv("../data/clean/theft_train.csv")
 
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 h = theft_train %>% ggplot(aes(x = theftrate)) +
   geom_histogram()+
   labs(y = "Count", 
@@ -44,17 +43,17 @@ ggsave(filename = "../results/histogram_of_response.png",
        width = 5, 
        height = 3)
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 mean(theft_train$theftrate)
 median(theft_train$theftrate)
 
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 theft_train %>% select(state,county,theftrate) %>% arrange(desc(theftrate)) %>% head(10) %>% 
   write_tsv("../results/top-10-counties-data.tsv")
 
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 map = map_data("county") %>%
   as_tibble() %>% 
   left_join(theft_train %>% 
@@ -79,7 +78,7 @@ ggsave(filename = "../results/response-map.png",
        width = 7, 
        height = 4)
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 theft_train_corrAll = theft_train%>% select(-fips, -state, -county,-theftrate)
@@ -87,10 +86,10 @@ M = cor(theft_train_corrAll)
 
 pdf(file = "../results/all_correlations.pdf")
 allcorrs = corrplot(M, type = 'lower', order = 'hclust', tl.col = 'black',
-         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.35)
+         cl.ratio = 0.2, tl.srt = 45, col = COL2('PuOr', 10), tl.cex = 0.4)
 dev.off()
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 cluster_safetynet = theft_train%>% select(-fips, -state, -county) %>% select(unemp_bens_possible, spend_per_capita, saversperhouses, no_health_ins, foodstamp)
 
 cluster_criminaljustice = theft_train%>% select(-fips, -state, -county) %>% select(incar_rate, police_violence_score, police_accountability_score, approach_to_policing_score, police_funding_score)
@@ -102,7 +101,7 @@ cluster_ses = theft_train%>% select(-fips, -state, -county) %>% select(lessthan_
 cluster_demo= theft_train%>% select(-fips, -state, -county) %>% select(med_age,permale,divorced,widowed,nevermarried,pertrump,pop_density,housing_density,res_seg_nonwhite_white,Marriedcouplefamily,ForeignBornEuropePct,ForeignBornMexPct,ForeignBornCaribPct,ForeignBornCentralSouthAmPct,ForeignBornAsiaPct,ForeignBornAfricaPct,NonEnglishHHNum,AvgHHSize,PopChangeRate1819,withkids,single_mom,singledad,foreignborn,fromdifstate,fromabroad)
 
 
-## ------------------------------------------------------------------------------------------------------------------------------------------
+
 M_safetynet = cor(cluster_safetynet)
 M_criminaljustice = cor(cluster_criminaljustice)
 M_health = cor(cluster_health)
@@ -253,5 +252,5 @@ imp_vars_vs_theft = plot_grid(p1, p2,p3, p4,p5, p6, nrow = 3)
 ggsave(filename = "../results/imp_vars_vs_theft.png", 
        plot = imp_vars_vs_theft, 
        device = "png", 
-       width = 7, 
-       height = 4)
+       width = 12, 
+       height = 8)

@@ -18,7 +18,7 @@ set.seed(471)
 ## ---- cache=TRUE---------------------------------------------------------------------------------------------------------------------------
 set.seed(471) # set seed for reproducibility
 
-mvalues = seq(5,20, by = 1)
+mvalues = seq(6,20, by = 1)
 oob_errors = numeric(length(mvalues))
 ntree = 500
 for(idx in 1:length(mvalues)){
@@ -68,8 +68,8 @@ rf_opt = randomForest(theftrate ~ .-fips -state -county, mtry = lowest_m, ntree 
 save(rf_opt, file = "../results/rf_opt.Rda")
 
 ## ----varimp, echo = TRUE, fig.width = 11, fig.height = 6, out.width = "100%", fig.align='center', fig.cap = "Variable Importance Plot for the optimal random forest model.", fig.pos = "H"----
-png(width = 6, 
-    height = 4,
+png(width = 11, 
+    height = 6,
     res = 300,
     units = "in", 
     filename = "../results/varImpPlot.png")
@@ -155,7 +155,7 @@ summary(gbm_3, n.trees = optimal_num_trees, plotit = FALSE) %>% tibble() %>%
 
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------
-housing = plot(gbm_3, i.var = "housing_density", 
+bachplus = plot(gbm_3, i.var = "bachplus", 
                n.trees = optimal_num_trees)
 
 
@@ -176,20 +176,20 @@ bens = plot(gbm_3, i.var = "unemp_bens_possible", n.trees =
 
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------
-police = plot(gbm_3, i.var = "police_funding_score", n.trees = 
+health = plot(gbm_3, i.var = "poor_fair_health", n.trees = 
                 optimal_num_trees) 
 
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------
-healthins = plot(gbm_3, i.var = "no_health_ins", n.trees = 
+dis35to64 = plot(gbm_3, i.var = "dis35to64", n.trees = 
                    optimal_num_trees) 
 
 
 ## ------------------------------------------------------------------------------------------------------------------------------------------
-rel_imp_plots = plot_grid(nrow = 2, housing, bens, healthins, police, trump, FIRE)
+rel_imp_plots = plot_grid(nrow = 2, bens, FIRE, bachplus, health, trump, dis35to64)
 
 ggsave(filename = "../results/rel_imp_plots.png", 
        plot = rel_imp_plots, 
        device = "png", 
-       width = 7, 
-       height = 4)
+       width = 10, 
+       height = 7)
